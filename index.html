@@ -7,7 +7,7 @@
 <!-- Ícono de la pestaña (favicon). Es el emoji ⚓ generado como SVG, no necesita ningún archivo extra.
      Si más adelante querés tu propio logo, reemplazá esta línea por, por ejemplo:
      <link rel="icon" type="image/png" href="favicon.png">  (subiendo favicon.png junto al resto de las imágenes) -->
-<link rel="icon" type="image/png" href="iti logo.png">
+<link rel="icon" type="image/png" href="img/iti logo.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -505,15 +505,15 @@ const PIER_BOUNDS={
 // 1 línea → centrada; 2 líneas → separadas; 3 líneas → apretadas pero separadas entre sí.
 const FLOW_LINE_OFFSETS={1:[0],2:[-10,10],3:[-8,0,8]};
 
-const BASEMAP=new Image(); BASEMAP.src="dale.png";
-const BUQUE_IMG=new Image(); BUQUE_IMG.src="buque.png";
+const BASEMAP=new Image(); BASEMAP.src="img/dale.png";
+const BUQUE_IMG=new Image(); BUQUE_IMG.src="img/buque.png";
 
 // ─── SEÑALES DE RIESGO: 8 predeterminadas (r1.png … r8.png) ───────────────
 // Editá estos 8 textos con el nombre que quieras que aparezca debajo de cada ícono
 const RISK_LABELS=["Carga Suspendida","Colición","Trabajo en altura","Riesgo Eléctrico","Horquilla","Carga peligrosa","Atropello","Atrapamiento"];
 const riskDefs=[];
 for(let i=0;i<8;i++){
-  const src=`r${i+1}.png`;
+  const src=`img/r${i+1}.png`;
   const img=new Image();
   img.onload=()=>redrawMainMap();
   img.src=src;
@@ -524,7 +524,7 @@ for(let i=0;i<8;i++){
 // Editá estos 3 textos si querés cambiar el nombre que aparece debajo de cada miniatura
 const IMAGE_LABELS=["Grúa Muelle","Porta contenedor","tracto camión"];
 let imageDefs=[];
-["MHC.png","Porta.png","Tracto.png"].forEach((src,i)=>{
+["img/MHC.png","img/Porta.png","img/Tracto.png"].forEach((src,i)=>{
   const img=new Image();
   img.onload=()=>redrawMainMap();
   img.src=src;
