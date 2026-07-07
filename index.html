@@ -466,9 +466,24 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   </div>
 </div>
 
+<!-- Firebase (guardado compartido en tiempo real). Debe cargar ANTES del script principal. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────
 const EXCEL_URL = "https://strenaterminals-my.sharepoint.com/personal/mfloresm_iti_cl/_layouts/15/Doc.aspx?sourcedoc=%7Bf3859865-8c79-43b8-984e-f59b0e3e867f%7D&action=embedview&wdAllowInteractivity=True&wdDownloadButton=True";
+
+// ─── FIREBASE (guardado compartido en tiempo real entre todos los que usen la página) ────
+const firebaseConfig = {
+  apiKey: "AIzaSyAxeEGvYLbHJpDBCs0Iv9lw2UocfnXlftI",
+  authDomain: "plano-faenas-iti.firebaseapp.com",
+  databaseURL: "https://plano-faenas-iti-default-rtdb.firebaseio.com",
+  projectId: "plano-faenas-iti",
+  storageBucket: "plano-faenas-iti.firebasestorage.app",
+  messagingSenderId: "429399515500",
+  appId: "1:429399515500:web:0fc6703e5849eb284dd349"
+};
 
 // ─── CONSTANTES ───────────────────────────────────────────────
 const IMG_W=1226, IMG_H=576;
@@ -1137,61 +1152,114 @@ function redrawMainMap(){
   else{ctx.fillStyle="#d4d0c8";ctx.fillRect(r.x,r.y,r.w,r.h);}
   ctx.save();ctx.translate(r.x,r.y);drawOnCtx(ctx,activeMap,r.w,r.h);ctx.restore();
   updateFooter();
-  scheduleSave(); // guarda automáticamente en este navegador (localStorage), sin recargar la página
+  scheduleSave(); // guarda automáticamente (localStorage + Firebase), sin recargar la página
 }
 
-// ─── GUARDADO / CARGA AUTOMÁTICA (localStorage del navegador) ─────────────
-// Nota: esto guarda los datos SOLO en el navegador/dispositivo donde se usa la página.
-// No se comparte entre distintas personas ni distintas computadoras.
+// ─── GUARDADO / CARGA: localStorage (instantáneo, por navegador) + Firebase (compartido, en tiempo real) ──
 const STORAGE_KEY="plano_faenas_iti_v1";
 let saveTimer=null;
+let dbRef=null;
+let suppressSave=false; // true mientras aplicamos datos recibidos de Firebase, para no reenviarlos en loop
+
 function scheduleSave(){
+  if(suppressSave)return; // evita el loop: dato llega de Firebase → se aplica → no debe volver a guardarse
   clearTimeout(saveTimer);
   saveTimer=setTimeout(saveState,300);
 }
+
+function buildSaveData(){
+  return{
+    version:1,
+    fecha:document.getElementById("fecha")?.value||"",
+    state, // T1/T2/T3: vals, flujos, colores, posiciones de zonas/naves
+    userElements, // textos, riesgos e imágenes colocados en el mapa
+    nextElId,
+    // Solo se guardan las imágenes IMPORTADAS por el usuario (las 3 predeterminadas ya están en el código)
+    customImages:imageDefs.filter(d=>d.custom).map(d=>({id:d.id,src:d.src,label:d.label})),
+  };
+}
+
 function saveState(){
+  const data=buildSaveData();
   try{
-    const data={
-      version:1,
-      fecha:document.getElementById("fecha")?.value||"",
-      state, // T1/T2/T3: vals, flujos, colores, posiciones de zonas/naves
-      userElements, // textos, riesgos e imágenes colocados en el mapa
-      nextElId,
-      // Solo se guardan las imágenes IMPORTADAS por el usuario (las 3 predeterminadas ya están en el código)
-      customImages:imageDefs.filter(d=>d.custom).map(d=>({id:d.id,src:d.src,label:d.label})),
-    };
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   }catch(e){
     console.warn("No se pudo guardar en este navegador (posiblemente localStorage lleno o deshabilitado):",e);
   }
+  if(dbRef){
+    dbRef.set(data).catch(e=>console.warn("No se pudo sincronizar con Firebase:",e));
+  }
 }
+
+// Carga inicial desde localStorage (instantánea, mientras Firebase termina de conectar)
 function loadState(){
   let raw;
   try{ raw=localStorage.getItem(STORAGE_KEY); }catch(e){ return; }
   if(!raw)return;
   let data;
   try{ data=JSON.parse(raw); }catch(e){ return; }
+  applyLoadedData(data,false);
+}
 
-  if(data.fecha)document.getElementById("fecha").value=data.fecha;
+// Aplica un objeto de datos (venga de localStorage o de Firebase) al estado en memoria y refresca la UI.
+// fullRerender=true cuando llega en caliente desde Firebase (mientras la página ya está en uso),
+// para reconstruir también los paneles (turnos, flujo, imágenes) y no solo redibujar el mapa.
+function applyLoadedData(data,fullRerender){
+  if(!data)return;
+  suppressSave=true;
+  try{
+    if(data.fecha)document.getElementById("fecha").value=data.fecha;
 
-  if(data.state){
-    ["T1","T2","T3"].forEach(t=>{
-      if(data.state[t])Object.assign(state[t],data.state[t]);
-    });
+    if(data.state){
+      ["T1","T2","T3"].forEach(t=>{
+        if(data.state[t])Object.assign(state[t],data.state[t]);
+      });
+    }
+    if(Array.isArray(data.userElements)){
+      userElements.length=0;
+      data.userElements.forEach(el=>userElements.push(el));
+    }
+    if(typeof data.nextElId==="number")nextElId=Math.max(nextElId,data.nextElId);
+
+    if(Array.isArray(data.customImages)){
+      // Reemplaza las imágenes importadas por las que vengan en los datos (evita duplicados)
+      imageDefs=imageDefs.filter(d=>!d.custom);
+      data.customImages.forEach(d=>{
+        const img=new Image();
+        img.onload=()=>redrawMainMap();
+        img.src=d.src;
+        imageDefs.push({id:d.id,src:d.src,img,label:d.label,custom:true});
+      });
+    }
+
+    normalizeFlujoState();
+
+    if(fullRerender){
+      buildFlujoGrid();
+      populateImageGrid();
+      ["T1","T2","T3"].forEach(t=>renderTags(t,state[t].vals||[]));
+      redrawMainMap();
+    }
+  } finally {
+    suppressSave=false;
   }
-  if(Array.isArray(data.userElements)){
-    userElements.length=0;
-    data.userElements.forEach(el=>userElements.push(el));
-  }
-  if(typeof data.nextElId==="number")nextElId=Math.max(nextElId,data.nextElId);
+}
 
-  if(Array.isArray(data.customImages)){
-    data.customImages.forEach(d=>{
-      const img=new Image();
-      img.onload=()=>redrawMainMap();
-      img.src=d.src;
-      imageDefs.push({id:d.id,src:d.src,img,label:d.label,custom:true});
+// Conecta con Firebase y escucha cambios en tiempo real (los que hagan otras personas se reflejan solos)
+function initFirebaseSync(){
+  try{
+    if(typeof firebase==="undefined"){
+      console.warn("El SDK de Firebase no cargó; se seguirá funcionando solo con guardado local (localStorage).");
+      return;
+    }
+    firebase.initializeApp(firebaseConfig);
+    dbRef=firebase.database().ref(STORAGE_KEY);
+    dbRef.on("value",snapshot=>{
+      const data=snapshot.val();
+      if(data)applyLoadedData(data,true);
     });
+  }catch(e){
+    console.warn("No se pudo conectar a Firebase; se seguirá funcionando solo con guardado local (localStorage):",e);
   }
 }
 
@@ -1585,6 +1653,8 @@ window.addEventListener("load",()=>{
   BASEMAP.onload=()=>redrawMainMap();
   BUQUE_IMG.onload=redrawMainMap;
   if(BASEMAP.complete&&BASEMAP.naturalWidth>0)redrawMainMap();
+
+  initFirebaseSync(); // conecta y sincroniza en tiempo real con Firebase (si está disponible)
 });
 window.addEventListener("beforeunload",()=>{clearTimeout(saveTimer);saveState();});
 window.addEventListener("resize",()=>{
