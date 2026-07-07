@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano Faenas Portuarias – ITI</title>
+<!-- Ícono de la pestaña (favicon). Es el emoji ⚓ generado como SVG, no necesita ningún archivo extra.
+     Si más adelante querés tu propio logo, reemplazá esta línea por, por ejemplo:
+     <link rel="icon" type="image/png" href="favicon.png">  (subiendo favicon.png junto al resto de las imágenes) -->
+<link rel="icon" type="image/png" href="iti logo.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#162e25;--surface:#283d5c;--card:#151c26;--border:#739fbf;
+  --text:#ffffff;--muted:#ffffff;--muted2:#ffffff;
+  --t1:#f7f9ff;--t2:#f7f9ff;--t3:#f7f9ff;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;
+     display:flex;flex-direction:column;padding:8px;gap:6px}
+
+.header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+        padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.logo{font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#739fbf;white-space:nowrap}
+.fecha-wrap{display:flex;align-items:center;gap:7px}
+.fecha-wrap label{font-size:14px;color:var(--muted)}
+.fecha-wrap input{background:var(--surface);border:1px solid var(--border);color:var(--text);
+                  padding:3px 8px;border-radius:5px;font-size:14px}
+.fecha-wrap input:focus{outline:none;border-color:var(--t1)}
+
+/* ─── LAYOUT PRINCIPAL: CSS Grid con áreas nombradas ─── */
+.main-grid{
+  flex:1 1 auto;display:grid;min-height:0;overflow:hidden;gap:6px;
+  grid-template-rows:48px 1fr;
+  grid-template-columns:300px 1fr 170px;
+  grid-template-areas:
+    "excel   excel  legend"
+    "sidebar maps   legend";
+}
+/* Áreas de cada panel */
+.excel-panel  {grid-area:excel;  min-height:0}
+.sidebar-col  {grid-area:sidebar;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.traffic-panel{flex:0 0 auto;min-height:0}
+.paste-panel  {flex:1 1 auto;min-height:0}
+.maps-panel   {grid-area:maps;   min-height:0}
+.legend-panel {grid-area:legend; min-height:0}
+
+.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;
+       display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.panel-head{flex:0 0 auto;padding:5px 10px;font-size:13px;font-weight:700;letter-spacing:.5px;
+            text-transform:uppercase;border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:6px;white-space:nowrap}
+
+.excel-panel{height:48px;align-self:start}
+.excel-panel .panel-head{background:linear-gradient(135deg,#1a2e50,#0a1828);border-bottom:none;height:100%}
+.excel-head-btns{display:flex;align-items:center;gap:6px;margin-left:auto}
+.excel-mini-link{font-size:12px;color:#7eb8f7;text-decoration:none;border:1px solid var(--border);
+           padding:3px 9px;border-radius:5px;background:var(--surface);white-space:nowrap}
+.excel-mini-link:hover{border-color:var(--t1)}
+.excel-mini-btn{background:#0d2a5a;border:1px solid #2563eb;color:#7eb8f7;
+                padding:3px 9px;border-radius:5px;font-size:12px;cursor:pointer;white-space:nowrap}
+.excel-mini-btn:hover{background:#123a7a}
+
+.paste-panel{border-color:#13364d;overflow-y:auto}
+.paste-panel .panel-head{background:linear-gradient(135deg,#0a2a3a,#061822);color:#7eb8f7;border-bottom-color:#1a4a6a}
+.paste-panel::-webkit-scrollbar{width:3px}
+.paste-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.ctrl-section{padding:7px 9px;border-bottom:1px solid var(--border)}
+.ctrl-section:last-child{border-bottom:none}
+.paste-lbl{font-size:16px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.paste-badge{background:var(--t1);color:#112d40;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+.paste-badge-btn{background:#3a0a0a;color:#fca5a5;font-size:11px;font-weight:700;padding:3px 8px;
+                  border-radius:4px;border:1px solid #5a1a1a;cursor:pointer;white-space:nowrap}
+.paste-badge-btn:hover{background:#5a1a1a}
+.clear-etiquetas-btn{width:100%;margin-top:6px;background:#3a0a0a;color:#fca5a5;font-size:12px;
+                      font-weight:700;padding:6px 8px;border-radius:5px;border:1px solid #5a1a1a;cursor:pointer}
+.clear-etiquetas-btn:hover{background:#5a1a1a}
+
+/* Paste area mejorada */
+.paste-zone{position:relative}
+.paste-ta{width:100%;background:var(--bg);border:2px dashed var(--border);color:var(--text);
+          padding:8px;border-radius:5px;font-family:monospace;height:62px;
+          resize:none;line-height:1.5;font-size:15px;transition:border-color .2s}
+.paste-ta:focus{outline:none;border-color:#7eb8f7;border-style:solid}
+.paste-ta::placeholder{color:var(--muted2);font-size:13px}
+.paste-hint{font-size:12px;color:#739fbf;margin-top:4px;display:flex;align-items:center;gap:5px}
+.paste-hint strong{background:#1a4a6a;color:#7eb8f7;padding:1px 5px;border-radius:3px;font-size:11px}
+.paste-status{font-size:12px;color:#86efac;margin-top:3px;min-height:14px;font-style:italic}
+
+.dc{border-radius:5px;border:1px solid var(--border);overflow:hidden;margin-bottom:4px}
+.dc:last-child{margin-bottom:0}
+.dc-head{display:flex;align-items:center;justify-content:space-between;padding:3px 7px;font-size:16px;font-weight:700}
+.dc-t1 .dc-head{background:#0f2040;color:#7eb8f7;border-bottom:1px solid #1e4aaa}
+.dc-t2 .dc-head{background:#0a2018;color:#86efac;border-bottom:1px solid #1a5c30}
+.dc-t3 .dc-head{background:#200a0a;color:#fca5a5;border-bottom:1px solid #8a1a1a}
+.dc-tags{padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;min-height:20px}
+.ptag{font-size:11px;padding:2px 5px;border-radius:3px;font-weight:600;color:#fff;
+      cursor:pointer;user-select:none;transition:filter .15s}
+.ptag:hover{filter:brightness(1.2)}
+.ptag[data-fixed]{cursor:default}.ptag[data-fixed]:hover{filter:none}
+.dc-empty{font-size:15px;color:var(--muted2);font-style:italic}
+
+.traffic-panel{border-color:#5a1a1a}
+.traffic-panel .panel-head{background:linear-gradient(135deg,#3a0a0a,#1a0505);color:#fca5a5;border-bottom-color:#5a1a1a}
+.traffic-body{padding:7px 8px;overflow-y:auto;flex:1}
+.traffic-body::-webkit-scrollbar{width:3px}
+.flujo-tbl{width:100%;border-collapse:collapse}
+.flujo-tbl th{font-size:16px;color:#ffffff;font-weight:600;text-align:center;padding:3px 1px;border-bottom:1px solid var(--border)}
+.flujo-tbl th.th-loc{color:#ffffff}
+.flujo-tbl td{padding:4px 2px;text-align:center;vertical-align:middle}
+.tr-t1{background:rgba(37,99,235,.06)}.tr-t2{background:rgba(22,163,74,.06)}.tr-t3{background:rgba(220,38,38,.06)}
+.tr-lbl{font-size:15px;font-weight:700;text-align:left!important;padding-left:4px!important;white-space:nowrap}
+.tr-t1 .tr-lbl{color:#7eb8f7}.tr-t2 .tr-lbl{color:#86efac}.tr-t3 .tr-lbl{color:#fca5a5}
+.fbtn-g{display:flex;gap:4px;justify-content:center}
+.fbtn-g-multi{display:flex;flex-direction:column;gap:3px;align-items:center}
+.flow-line-row{display:flex;gap:3px;align-items:center}
+.flow-line-row .fbtn-dir{font-size:14px;min-width:24px;padding:3px 4px}
+.flow-line-row .fbtn.cc{width:15px;height:15px;min-width:15px;font-size:11px;line-height:15px}
+.flow-line-remove{background:#3a0a0a;color:#fca5a5;border:1px solid #5a1a1a;border-radius:4px;
+                   font-size:10px;width:15px;height:15px;line-height:13px;padding:0;cursor:pointer}
+.flow-line-remove:hover{background:#5a1a1a}
+.flow-line-add{background:none;border:1px dashed var(--border);color:#7eb8f7;border-radius:4px;
+                font-size:10px;padding:2px 6px;cursor:pointer;margin-top:1px;white-space:nowrap}
+.flow-line-add:hover{background:var(--surface)}
+.fbtn{padding:4px 6px;font-size:15px;border:1px solid var(--border);border-radius:4px;
+      background:var(--surface);color:var(--muted);cursor:pointer;min-width:26px;
+      text-align:center;transition:all .12s;line-height:1}
+.fbtn:hover{background:var(--border)}
+.fbtn-dir{font-size:18px;font-weight:700;min-width:32px;padding:5px 6px}
+.fbtn.ac-ltr{background:#0d2a5a;border-color:var(--t1);color:#7eb8f7}
+.fbtn.ac-rtl{background:#3a0a0a;border-color:var(--t3);color:#fca5a5}
+.fbtn.ac-both{background:#0a2a14;border-color:var(--t2);color:#86efac}
+.fbtn.ac-none{background:#222;border-color:#333;color:#8894b8}
+.fbtn.cc{min-width:19px;width:19px;height:19px;font-size:15px;border-radius:50%;padding:0;
+         line-height:19px;border:2px solid rgba(255,255,255,.25);align-self:center}
+
+.maps-panel{min-height:0;border-color:#1a4a2a}
+.map-tabs{flex:0 0 auto;display:flex;border-bottom:1px solid var(--border)}
+.map-tab{flex:1;padding:5px 3px;font-size:17px;font-weight:700;background:none;border:none;
+         border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;
+         display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s}
+.map-tab:hover{color:var(--text);background:var(--surface)}
+.map-tab.act-t1{color:#7eb8f7;border-bottom-color:var(--t1);background:rgba(37,99,235,.07)}
+.map-tab.act-t2{color:#86efac;border-bottom-color:var(--t2);background:rgba(22,163,74,.07)}
+.map-tab.act-t3{color:#fca5a5;border-bottom-color:var(--t3);background:rgba(220,38,38,.07)}
+.tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tdot-1{background:var(--t1)}.tdot-2{background:var(--t2)}.tdot-3{background:var(--t3)}
+.tab-hrs{font-size:15px;font-weight:400;opacity:.7}
+.map-container{flex:1 1 auto;position:relative;background:#d4d0c8;overflow:hidden;min-height:0}
+.map-canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.map-footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+            padding:3px 9px;border-top:1px solid var(--border);background:var(--surface)}
+.expand-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;
+            border-radius:4px;font-size:14px;cursor:pointer;transition:all .15s}
+.expand-btn:hover{background:var(--border);color:var(--text)}
+.download-menu{display:none;position:absolute;bottom:130%;right:0;background:#1a2035;border:1px solid #263050;
+               border-radius:8px;padding:5px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60}
+.download-menu.open{display:flex;flex-direction:column;gap:3px}
+.download-menu button{background:none;border:none;color:#dde2ef;text-align:left;padding:7px 9px;
+                       border-radius:5px;font-size:14px;cursor:pointer;white-space:nowrap}
+.download-menu button:hover{background:#263050}
+.map-finfo{font-size:16px;color:var(--muted2)}
+
+/* Drag hint */
+.drag-hint{font-size:12px;color:#739fbf;padding:3px 9px;border-top:1px solid var(--border);background:rgba(0,0,0,.2);
+           text-align:center;flex:0 0 auto}
+
+/* LEYENDA */
+.legend-panel{border-color:#4a3a10;overflow:hidden}
+.legend-panel .panel-head{background:linear-gradient(135deg,#2a1e04,#1a1202);color:#f0c060;
+                           border-bottom-color:#4a3a10;font-size:15px;padding:7px 10px}
+.legend-body{padding:14px 12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:7px}
+.legend-body::-webkit-scrollbar{width:3px}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--muted);white-space:nowrap}
+.leg-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.leg-line{width:26px;height:4px;border-radius:2px;flex-shrink:0}
+.leg-sep{width:100%;height:1px;background:var(--border);margin:6px 0}
+.leg-sub{font-size:15px;font-weight:700;color:#f0c060;margin:3px 0;letter-spacing:.5px}
+
+/* ─── CONTEXT MENU ─────────────────────────────────────────── */
+.ctx-menu{display:none;position:fixed;z-index:500;background:#1a2035;border:1px solid #263050;
+          border-radius:10px;padding:0;width:340px;max-height:440px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+.ctx-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;
+            border-bottom:1px solid #263050;font-size:14px;font-weight:700;color:#7eb8f7}
+.ctx-close{background:none;border:none;color:#7a88a8;cursor:pointer;font-size:17px;line-height:1}
+.ctx-close:hover{color:#fff}
+.ctx-option{width:100%;padding:8px 10px;background:none;border:none;border-bottom:1px solid #263050;
+            color:#dde2ef;text-align:left;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:7px}
+.ctx-option:hover{background:#263050}
+.ctx-sep-label{padding:5px 10px;font-size:12px;font-weight:700;color:#7a88a8;text-transform:uppercase;letter-spacing:.5px}
+.ctx-risks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 10px 10px}
+.risk-btn{background:#0a1828;border:1px solid #263050;border-radius:5px;cursor:pointer;
+          overflow:hidden;aspect-ratio:1/1.2;display:flex;align-items:center;justify-content:center;
+          transition:border-color .15s;flex-direction:column;gap:2px}
+.risk-btn:hover{border-color:#2563eb;background:#0d2a5a}
+.risk-btn .risk-lbl{font-size:11px;color:#7eb8f7;font-weight:700;text-align:center}
+.risk-thumb{width:100%;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.risk-thumb canvas{max-width:100%;max-height:100%;object-fit:contain}
+
+/* ─── TEXT DIALOG ──────────────────────────────────────────── */
+.dialog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;
+                align-items:center;justify-content:center}
+.dialog-overlay.open{display:flex}
+.dialog-box{background:#1a2035;border:1px solid #263050;border-radius:10px;padding:18px;
+            width:340px;box-shadow:0 8px 32px rgba(0,0,0,.8)}
+.dialog-title{font-size:15px;font-weight:700;color:#7eb8f7;margin-bottom:12px}
+.dialog-box input{width:100%;background:#0b0f1a;border:1px solid #263050;color:#fff;
+                  padding:8px 10px;border-radius:5px;font-size:16px;margin-bottom:10px}
+.dialog-box input:focus{outline:none;border-color:#2563eb}
+.dialog-btns{display:flex;gap:8px;justify-content:flex-end}
+.dialog-btns button{padding:6px 14px;border-radius:5px;font-size:14px;cursor:pointer;border:none;font-weight:700}
+.btn-ok{background:#2563eb;color:#fff}.btn-ok:hover{background:#1d4ed8}
+.btn-cancel{background:#263050;color:#7a88a8}.btn-cancel:hover{background:#3a4268}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
+               align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:12px;
+           width:100%;max-width:1400px;max-height:95vh;overflow:auto;
+           box-shadow:0 30px 80px rgba(0,0,0,.8);display:flex;flex-direction:column}
+.modal-head{padding:8px 14px;display:flex;align-items:center;justify-content:space-between;
+            border-bottom:1px solid var(--border);flex:0 0 auto;position:sticky;top:0;
+            background:var(--card);z-index:1}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{background:none;border:1px solid var(--border);color:var(--text);
+             width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:17px;
+             display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--border)}
+.modal-map{background:#d4d0c8;flex:1}
+.modal-canvas{display:block;width:100%;aspect-ratio:1226/576;pointer-events:none}
+.excel-modal-map{background:#fff;flex:1;height:92vh}
+#excel-modal{padding:0}
+#excel-modal .modal-box{width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0}
+#excel-modal .excel-modal-map{height:auto;flex:1 1 auto}
+.risk-btn{position:relative}
+.risk-add-btn{border-style:dashed;border-color:#2563eb}
+.risk-add-btn .risk-thumb{color:#7eb8f7;font-weight:700;font-size:24px}
+.risk-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;
+          border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;
+          line-height:18px;padding:0;z-index:2}
+.risk-del:hover{background:#8a1a1a}
+.excel-modal-map iframe{width:100%;height:100%;border:none;display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Plano Faenas Portuarias · ITI</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="fecha-wrap">
+      <label>Fecha</label>
+      <input type="date" id="fecha" onchange="redrawMainMap()">
+    </div>
+  </div>
+</div>
+
+<div class="main-grid">
+  <div class="panel excel-panel">
+    <div class="panel-head">
+      <span>Excel de Planificación</span>
+      <div class="excel-head-btns">
+        <a class="excel-mini-link" id="open-excel-link" href="#" target="_blank" rel="noopener">Abrir ↗</a>
+        <button class="excel-mini-btn" onclick="expandExcelModal()">⤢ Ver Excel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="sidebar-col">
+    <!-- FLUJO -->
+    <div class="panel traffic-panel">
+      <div class="panel-head">🚦 Flujo de tránsito</div>
+      <div class="traffic-body">
+        <table class="flujo-tbl">
+          <thead><tr><th></th><th class="th-loc">Pier 3</th><th class="th-loc">Pasillo</th><th class="th-loc">Pier 4</th></tr></thead>
+          <tbody>
+            <tr class="tr-t1"><td class="tr-lbl">T2</td>
+              <td><div class="fbtn-g" id="fl-T1-pier3"></div></td>
+              <td><div class="fbtn-g" id="fl-T1-pasillo"></div></td>
+              <td><div class="fbtn-g" id="fl-T1-pier4"></div></td>
+            </tr>
+            <tr class="tr-t2"><td class="tr-lbl">T3</td>
+              <td><div class="fbtn-g" id="fl-T2-pier3"></div></td>
+              <td><div class="fbtn-g" id="fl-T2-pasillo"></div></td>
+              <td><div class="fbtn-g" id="fl-T2-pier4"></div></td>
+            </tr>
+            <tr class="tr-t3"><td class="tr-lbl">T1</td>
+              <td><div class="fbtn-g" id="fl-T3-pier3"></div></td>
+              <td><div class="fbtn-g" id="fl-T3-pasillo"></div></td>
+              <td><div class="fbtn-g" id="fl-T3-pier4"></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:6px;font-size:14px;color:var(--muted2)">Clic en flecha = dirección · ● = color · + línea = agregar (máx. 3) · ✕ = quitar</div>
+      </div>
+    </div>
+
+    <!-- PEGAR TURNOS -->
+    <div class="panel paste-panel">
+      <div class="panel-head">📋 Datos de turno</div>
+      <div class="ctrl-section">
+        <div class="paste-lbl">
+          <span>Pegar T1 / T2 / T3 (1 o 3 filas)</span>
+          <button class="paste-badge-btn" onclick="clearPasteBox()" title="Vaciar el cuadro de pegar">🗑 Borrar pegado</button>
+        </div>
+        <div class="paste-zone">
+          <textarea class="paste-ta" id="paste-all"
+            placeholder="1. Copia las celdas en Excel&#10;2. Haz clic aquí&#10;3. Pega con Ctrl+V"
+            oninput="handlePasteAll()"></textarea>
+        </div>
+        <div class="paste-hint">
+          <strong>Excel → copiar → clic aquí → Ctrl+V</strong>
+          <button onclick="tryClipboard()" style="margin-left:auto;background:#0d2a5a;border:1px solid #2563eb;
+                  color:#7eb8f7;padding:2px 8px;border-radius:3px;font-size:12px;cursor:pointer">📋 Pegar</button>
+        </div>
+        <button class="clear-etiquetas-btn" onclick="clearEtiquetas()"
+                title="Borra las etiquetas de los 3 turnos (mapa + tarjetas de Datos de turno)">
+          🗑 Borrar etiquetas
+        </button>
+        <div class="paste-status" id="paste-status"></div>
+      </div>
+      <div class="ctrl-section" style="flex:1;overflow-y:auto">
+        <div class="dc dc-t1">
+          <div class="dc-head"><span>🔵 Hoy 2do Turno</span><span style="font-weight:400;font-size:11px">15:30–23:30</span></div>
+          <div class="dc-tags" id="tags-T1"><span class="dc-empty">Sin datos</span></div>
+        </div>
+        <div class="dc dc-t2">
+          <div class="dc-head"><span>🟢 Hoy 3er Turno</span><span style="font-weight:400;font-size:11px">23:00–06:30</span></div>
+          <div class="dc-tags" id="tags-T2"><span class="dc-empty">Sin datos</span></div>
+        </div>
+        <div class="dc dc-t3">
+          <div class="dc-head"><span>🔴 Mañana 1er Turno</span><span style="font-weight:400;font-size:11px">08:00–15:30</span></div>
+          <div class="dc-tags" id="tags-T3"><span class="dc-empty">Sin datos</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- MAPA -->
+    <div class="panel maps-panel">
+      <div class="map-tabs">
+        <button class="map-tab act-t1" id="mtab-T1" onclick="showMapTab('T1')">
+          <span class="tdot tdot-1"></span>2do Turno<span class="tab-hrs">15:30–23:30</span>
+        </button>
+        <button class="map-tab" id="mtab-T2" onclick="showMapTab('T2')">
+          <span class="tdot tdot-2"></span>3er Turno<span class="tab-hrs">23:00–06:30</span>
+        </button>
+        <button class="map-tab" id="mtab-T3" onclick="showMapTab('T3')">
+          <span class="tdot tdot-3"></span>1er Turno<span class="tab-hrs">08:00–15:30</span>
+        </button>
+      </div>
+      <div class="map-container" id="map-container">
+        <canvas class="map-canvas" id="main-cv"></canvas>
+      </div>
+      <div class="drag-hint">⟵ Arrastra = mover · Scroll sobre riesgo/texto = cambiar tamaño · Clic en zona vacía = agregar ⟶</div>
+      <div class="map-footer">
+        <span class="map-finfo" id="map-finfo">—</span>
+        <div style="display:flex;gap:5px">
+          <button class="expand-btn" style="color:#f87171;border-color:#5a1a1a"
+                  onclick="clearUserElements()" title="Elimina los textos, riesgos e imágenes que agregaste en el mapa (no toca los datos de turno)">
+            🗑 Borrar imágenes y texto
+          </button>
+          <button class="expand-btn" style="color:#f87171;border-color:#5a1a1a"
+                  onclick="clearTodo()" title="Borra TODO: imágenes/textos agregados + etiquetas de los 3 turnos + cuadro de pegar">
+            🗑 Borrar todo
+          </button>
+          <div style="position:relative">
+            <button class="expand-btn" onclick="toggleDownloadMenu(event)">⬇ Descargar</button>
+            <div id="download-menu" class="download-menu">
+              <button onclick="downloadTurnoActual()">📷 Este turno (imagen)</button>
+              <button onclick="downloadTodosCombinados()">📷 Los 3 combinados (uno abajo del otro)</button>
+              <button onclick="downloadTodosSeparados()">📷 Los 3 por separado (3 archivos)</button>
+            </div>
+          </div>
+          <button class="expand-btn" onclick="expandModal()">⤢ Expandir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEYENDA -->
+    <div class="panel legend-panel">
+      <div class="panel-head">Leyenda</div>
+      <div class="legend-body">
+        <div class="leg-sub">ZONAS</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#92D050"></div>Almacén</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#FF4444"></div>CFS/Loma</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#00B0F0"></div>Patio</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#1a3a5a"></div>Nave</div>
+        <div class="leg-sep"></div>
+        <div class="leg-sub">TRÁNSITO</div>
+        <div class="leg-item"><div class="leg-line" style="background:#2563eb"></div>Nave</div>
+        <div class="leg-item"><div class="leg-line" style="background:#f59e0b"></div>Externos</div>
+        <div class="leg-item"><div class="leg-line" style="background:#16a34a"></div>Bus</div>
+        <div class="leg-sep"></div>
+        <div class="leg-sub">COLOR ZONA</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#92D050"></div>Verde</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#00B0F0"></div>Celeste</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#FF4444"></div>Rojo</div>
+        <div class="leg-sep"></div>
+        <div class="leg-sub">COLOR SITIO</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#4a7aaa"></div>Azul osc.</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#38bdf8"></div>Azul clar.</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f87171"></div>Rojo</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#4ade80"></div>Verde</div>
+        <div class="leg-sep"></div>
+        <div style="font-size:15px;color:var(--muted2);line-height:1.6">Clic en etiqueta = cambiar color<br>Clic en texto = cambiar color</div>
+      </div>
+    </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu" class="ctx-menu">
+  <div class="ctx-header">
+    <span>Agregar al mapa</span>
+    <button class="ctx-close" onclick="closeCtxMenu()">✕</button>
+  </div>
+  <button class="ctx-option" onclick="startAddText()">📝 Cuadro de texto</button>
+  <div class="ctx-sep-label">Señales de Riesgo</div>
+  <div class="ctx-risks-grid" id="ctx-risks-grid">
+    <!-- Filled dynamically -->
+  </div>
+  <div class="ctx-sep-label">Imágenes</div>
+  <div class="ctx-risks-grid" id="ctx-images-grid">
+    <!-- Filled dynamically -->
+  </div>
+  <input type="file" id="image-upload-input" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+</div>
+
+<!-- TEXT INPUT DIALOG -->
+<div class="dialog-overlay" id="text-dialog">
+  <div class="dialog-box">
+    <div class="dialog-title">📝 Texto libre en el mapa</div>
+    <input type="text" id="text-input" placeholder="Escribe aquí..." autofocus onkeydown="if(event.key==='Enter')confirmAddText()">
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="cancelTextDialog()">Cancelar</button>
+      <button class="btn-ok" onclick="confirmAddText()">Agregar al mapa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MAPA -->
+<div class="modal-overlay" id="modal" onclick="closeModalBg(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-map" id="modal-map-wrap">
+      <canvas class="modal-canvas" id="modal-cv"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EXCEL -->
+<div class="modal-overlay" id="excel-modal" onclick="closeExcelModalBg(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title">Excel de Planificación</div>
+      <button class="modal-close" onclick="closeExcelModal()">✕</button>
+    </div>
+    <div class="excel-modal-map">
+      <iframe id="excel-modal-frame" allowfullscreen="true"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────
+const EXCEL_URL = "https://strenaterminals-my.sharepoint.com/personal/mfloresm_iti_cl/_layouts/15/Doc.aspx?sourcedoc=%7Bf3859865-8c79-43b8-984e-f59b0e3e867f%7D&action=embedview&wdAllowInteractivity=True&wdDownloadButton=True";
+
+// ─── CONSTANTES ───────────────────────────────────────────────
+const IMG_W=1226, IMG_H=576;
+const ARROW_COLORS=["#2563eb","#f59e0b","#16a34a"];
+const ARROW_LABELS=["Tránsito nave","Tránsito externos","Tránsito bus"];
+const ZONE_COLORS=[{bg:"#92D050",text:"#1a3a00"},{bg:"#00B0F0",text:"#fff"},{bg:"#FF4444",text:"#fff"}];
+const ZONE_COLOR_DEFAULTS=[0,2,2,1,1,1,1,1,1];
+const SITE_COLORS=[
+  {bg:"rgba(18,38,80,.9)",  border:"#4a7aaa",text:"#c8ddf8"},
+  {bg:"rgba(0,100,180,.9)", border:"#38bdf8",text:"#e0f5ff"},
+  {bg:"rgba(150,15,15,.9)", border:"#f87171",text:"#fecaca"},
+  {bg:"rgba(10,90,35,.9)",  border:"#4ade80",text:"#bbf7d0"},
+];
+
+const ZONAS=[
+  {name:"Almacén",   px:95,  py:248},
+  {name:"Loma",      px:200, py:300},
+  {name:"Zona FR",   px:40,  py:40},
+  {name:"Patio CFS", px:300, py:400},
+  {name:"S",         px:40,  py:100},
+  {name:"K",         px:330, py:290},
+  {name:"A3-B4",     px:890, py:375},
+  {name:"C5-C7",     px:668, py:320},
+  {name:"Y1",        px:360, py:360},
+];
+const NAVE_POS={
+  at_mn:{px:800,py:258,w:250,h:38}, at_txt:{px:850,py:300,w:190,h:20},
+  au_mn:{px:880,py:482,w:335,h:40}, au_txt:{px:910,py:455,w:190,h:20},
+};
+const PIER_BOUNDS={
+  pier3:{y:330,x0:770,x1:1100}, pasillo:{y:389,x0:650,x1:1100}, pier4:{y:445,x0:810,x1:1100},
+};
+// Cómo se reparten verticalmente 1, 2 o 3 líneas dentro del mismo espacio (en píxeles del mapa base):
+// 1 línea → centrada; 2 líneas → separadas; 3 líneas → apretadas pero separadas entre sí.
+const FLOW_LINE_OFFSETS={1:[0],2:[-10,10],3:[-8,0,8]};
+
+const BASEMAP=new Image(); BASEMAP.src="dale.png";
+const BUQUE_IMG=new Image(); BUQUE_IMG.src="buque.png";
+
+// ─── SEÑALES DE RIESGO: 8 predeterminadas (r1.png … r8.png) ───────────────
+// Editá estos 8 textos con el nombre que quieras que aparezca debajo de cada ícono
+const RISK_LABELS=["Carga Suspendida","Colición","Trabajo en altura","Riesgo Eléctrico","Horquilla","Carga peligrosa","Atropello","Atrapamiento"];
+const riskDefs=[];
+for(let i=0;i<8;i++){
+  const src=`r${i+1}.png`;
+  const img=new Image();
+  img.onload=()=>redrawMainMap();
+  img.src=src;
+  riskDefs.push({id:"r"+(i+1),src,img,label:RISK_LABELS[i]||("Riesgo "+(i+1))});
+}
+
+// ─── IMÁGENES: 3 predeterminadas (img1.png, img2.png, img3.png) + las que el usuario suba ──
+// Editá estos 3 textos si querés cambiar el nombre que aparece debajo de cada miniatura
+const IMAGE_LABELS=["Grúa Muelle","Porta contenedor","tracto camión"];
+let imageDefs=[];
+["MHC.png","Porta.png","Tracto.png"].forEach((src,i)=>{
+  const img=new Image();
+  img.onload=()=>redrawMainMap();
+  img.src=src;
+  imageDefs.push({id:"img"+(i+1),src,img,label:IMAGE_LABELS[i]||("Imagen "+(i+1)),custom:false});
+});
+
+
+// ─── STATE ────────────────────────────────────────────────────
+function mkTurno(){
+  return{
+    vals:[],
+    // Cada ubicación (pier3/pasillo/pier4) tiene un array de hasta 3 líneas independientes.
+    // Cada línea: {dir:'ltr'|'rtl'|'both', colorIdx:0|1|2}
+    flujos:{pier3:[],pasillo:[],pier4:[]},
+    zoneColorIdx:[...ZONE_COLOR_DEFAULTS],
+    siteColorIdx:{at:0,au:0},
+    // Drag offsets (in basemap pixels)
+    zoneOffsets:Array.from({length:9},()=>({dx:0,dy:0})),
+    siteOffsets:{at:{dx:0,dy:0},au:{dx:0,dy:0}},
+  };
+}
+const state={T1:mkTurno(),T2:mkTurno(),T3:mkTurno()};
+let activeMap='T1';
+
+// User-placed elements (annotations)
+const userElements=[];
+let nextElId=1;
+
+// ─── DRAG STATE ───────────────────────────────────────────────
+let drag={active:false,type:null,turno:null,zoneIdx:null,elId:null,
+          mapStartX:0,mapStartY:0,elStartX:0,elStartY:0};
+let clickedHit=null; // tracks what element was clicked (for color cycle)
+let lastClickMapPos=null;
+let didDrag=false;
+
+// ─── MAP GEOMETRY ─────────────────────────────────────────────
+function getMapRect(W,H){
+  const nAR=IMG_W/IMG_H,cAR=W/H;
+  let dW,dH,dX,dY;
+  if(cAR>=nAR){dH=H;dW=H*nAR;dX=(W-dW)/2;dY=0;}
+  else{dW=W;dH=W/nAR;dX=0;dY=(H-dH)/2;}
+  return{x:Math.round(dX),y:Math.round(dY),w:Math.round(dW),h:Math.round(dH)};
+}
+
+function canvasToMap(cx,cy,cv){
+  const r=getMapRect(cv.width,cv.height);
+  return{
+    x:(cx-r.x)*(IMG_W/r.w),
+    y:(cy-r.y)*(IMG_H/r.h),
+    inBounds:(cx>=r.x&&cx<=r.x+r.w&&cy>=r.y&&cy<=r.y+r.h)
+  };
+}
+
+// ─── HIT DETECTION ────────────────────────────────────────────
+function hitTest(cx,cy,cv){
+  const m=canvasToMap(cx,cy,cv);
+  if(!m.inBounds) return null;
+  const mx=m.x,my=m.y,t=activeMap;
+  const vals=state[t].vals;
+
+  // User elements (topmost)
+  for(let i=userElements.length-1;i>=0;i--){
+    const el=userElements[i];
+    if(el.turnoFilter!=='all'&&el.turnoFilter!==t)continue;
+    if(mx>=el.px&&mx<=el.px+el.w&&my>=el.py&&my<=el.py+el.h)
+      return{type:'user',id:el.id,startX:el.px,startY:el.py};
+  }
+
+  // Vessels
+  const checkVessel=(key,navVal)=>{
+    if(!navVal)return null;
+    const isMN=navVal.startsWith("MN/");
+    const pos=key==='at'?(isMN?NAVE_POS.at_mn:NAVE_POS.at_txt):(isMN?NAVE_POS.au_mn:NAVE_POS.au_txt);
+    const off=state[t].siteOffsets[key];
+    const nx=pos.px+off.dx,ny=pos.py+off.dy;
+    if(mx>=nx&&mx<=nx+pos.w&&my>=ny&&my<=ny+pos.h)
+      return{type:'vessel',key,startX:off.dx,startY:off.dy};
+    return null;
+  };
+  const ha=checkVessel('at',vals[9]||'');if(ha)return ha;
+  const hb=checkVessel('au',vals[10]||'');if(hb)return hb;
+
+  // Zone labels
+  for(let i=0;i<ZONAS.length;i++){
+    if(!vals[i])continue;
+    const z=ZONAS[i],off=state[t].zoneOffsets[i];
+    const zx=z.px+off.dx,zy=z.py+off.dy;
+    if(mx>=zx&&mx<=zx+84&&my>=zy&&my<=zy+26)
+      return{type:'zone',index:i,startX:off.dx,startY:off.dy};
+  }
+  return null;
+}
+
+// ─── CANVAS EVENTS ────────────────────────────────────────────
+function initCanvasEvents(){
+  const cv=document.getElementById('main-cv');
+
+  cv.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    closeCtxMenu();
+    const rect=cv.getBoundingClientRect();
+    const scX=cv.width/rect.width,scY=cv.height/rect.height;
+    const cx=(e.clientX-rect.left)*scX,cy=(e.clientY-rect.top)*scY;
+    const m=canvasToMap(cx,cy,cv);
+    const hit=hitTest(cx,cy,cv);
+
+    didDrag=false;
+
+    if(hit){
+      clickedHit=hit;           // remember for possible click-to-cycle
+      lastClickMapPos=null;     // don't trigger context menu on element clicks
+      drag.active=true; drag.type=hit.type;
+      drag.turno=activeMap;
+      drag.mapStartX=m.x; drag.mapStartY=m.y;
+      if(hit.type==='zone'){drag.zoneIdx=hit.index;drag.elStartX=hit.startX;drag.elStartY=hit.startY;}
+      else if(hit.type==='vessel'){drag.vesselKey=hit.key;drag.elStartX=hit.startX;drag.elStartY=hit.startY;}
+      else if(hit.type==='user'){drag.elId=hit.id;drag.elStartX=hit.startX;drag.elStartY=hit.startY;}
+      cv.style.cursor='grabbing';
+    } else {
+      // Empty area — remember for context menu popup
+      lastClickMapPos=m.inBounds?{mapX:m.x,mapY:m.y}:null;
+    }
+  });
+
+  cv.addEventListener('mousemove',e=>{
+    const rect=cv.getBoundingClientRect();
+    const scX=cv.width/rect.width,scY=cv.height/rect.height;
+    const cx=(e.clientX-rect.left)*scX,cy=(e.clientY-rect.top)*scY;
+    const m=canvasToMap(cx,cy,cv);
+
+    if(drag.active){
+      didDrag=true;
+      const dx=m.x-drag.mapStartX,dy=m.y-drag.mapStartY;
+      const t=drag.turno;
+      if(drag.type==='zone'){
+        state[t].zoneOffsets[drag.zoneIdx].dx=drag.elStartX+dx;
+        state[t].zoneOffsets[drag.zoneIdx].dy=drag.elStartY+dy;
+      } else if(drag.type==='vessel'){
+        state[t].siteOffsets[drag.vesselKey].dx=drag.elStartX+dx;
+        state[t].siteOffsets[drag.vesselKey].dy=drag.elStartY+dy;
+      } else if(drag.type==='user'){
+        const el=userElements.find(e=>e.id===drag.elId);
+        if(el){el.px=drag.elStartX+dx;el.py=drag.elStartY+dy;}
+      }
+      redrawMainMap();
+    } else {
+      const hit=hitTest(cx,cy,cv);
+      cv.style.cursor=hit?'grab':'crosshair';
+    }
+  });
+
+  cv.addEventListener('mouseup',e=>{
+    const wasDragging=drag.active&&didDrag;
+    drag.active=false; didDrag=false;
+    const cv2=document.getElementById('main-cv');
+    cv2.style.cursor=hitTest.bind(null,
+      (e.clientX-cv2.getBoundingClientRect().left)*(cv2.width/cv2.getBoundingClientRect().width),
+      (e.clientY-cv2.getBoundingClientRect().top)*(cv2.height/cv2.getBoundingClientRect().height),
+      cv2
+    )()?'grab':'crosshair';
+
+    if(!wasDragging&&lastClickMapPos){
+      // Show context menu on empty area
+      setTimeout(()=>showCtxMenu(e.clientX,e.clientY,lastClickMapPos.mapX,lastClickMapPos.mapY),80);
+    } else if(!wasDragging&&clickedHit&&clickedHit.type==='user'){
+      // Click on text element → cycle color
+      const el=userElements.find(u=>u.id===clickedHit.id);
+      if(el&&el.type==='text'){
+        el.colorIdx=((el.colorIdx||0)+1)%ZONE_COLORS.length;
+        redrawMainMap();
+      }
+    }
+    lastClickMapPos=null;
+    clickedHit=null;
+  });
+
+  cv.addEventListener('mouseleave',()=>{
+    drag.active=false;
+    document.getElementById('main-cv').style.cursor='crosshair';
+  });
+
+  // Scroll sobre un riesgo/texto colocado = cambiar su tamaño
+  cv.addEventListener('wheel',e=>{
+    const rect=cv.getBoundingClientRect();
+    const scX=cv.width/rect.width,scY=cv.height/rect.height;
+    const cx=(e.clientX-rect.left)*scX,cy=(e.clientY-rect.top)*scY;
+    const hit=hitTest(cx,cy,cv);
+    if(!hit||hit.type!=='user')return;
+    const el=userElements.find(u=>u.id===hit.id);
+    if(!el)return;
+    e.preventDefault();
+    const factor=e.deltaY<0?1.08:0.92;
+    const isIcon=el.type==='risk'||el.type==='image';
+    const minW=isIcon?20:21, maxW=isIcon?260:420;
+    const minH=isIcon?20:5.5, maxH=isIcon?260:110;
+    const newW=Math.min(maxW,Math.max(minW,el.w*factor));
+    const newH=Math.min(maxH,Math.max(minH,el.h*factor));
+    // Mantiene el centro fijo al cambiar tamaño
+    el.px+=(el.w-newW)/2; el.py+=(el.h-newH)/2;
+    el.w=newW; el.h=newH;
+    redrawMainMap();
+  },{passive:false});
+
+  // Close ctx menu on outside click
+  document.addEventListener('mousedown',e=>{
+    const menu=document.getElementById('ctx-menu');
+    if(menu.style.display!=='none'&&!menu.contains(e.target)&&e.target!==document.getElementById('main-cv')){
+      closeCtxMenu();
+    }
+  });
+}
+
+// ─── CONTEXT MENU ────────────────────────────────────────────
+let pendingPos=null;
+function showCtxMenu(screenX,screenY,mapX,mapY){
+  pendingPos={mapX,mapY};
+  const menu=document.getElementById('ctx-menu');
+  menu.style.display='block';
+  const mw=220,mh=520;
+  let left=screenX+4,top=screenY+4;
+  if(left+mw>window.innerWidth)left=screenX-mw-4;
+  if(top+mh>window.innerHeight)top=screenY-mh-4;
+  menu.style.left=left+'px'; menu.style.top=top+'px';
+}
+function closeCtxMenu(){
+  document.getElementById('ctx-menu').style.display='none';
+}
+
+// ─── ADD TEXT ────────────────────────────────────────────────
+function startAddText(){
+  closeCtxMenu();
+  document.getElementById('text-dialog').classList.add('open');
+  setTimeout(()=>document.getElementById('text-input').focus(),50);
+}
+function confirmAddText(){
+  const text=document.getElementById('text-input').value.trim();
+  if(!text){cancelTextDialog();return;}
+  userElements.push({
+    id:nextElId++, type:'text', text,
+    px:pendingPos?.mapX??400, py:pendingPos?.mapY??300,
+    w:Math.min(200,text.length*7+20), h:26,
+    colorIdx:0,          // cycles: verde → celeste → rojo
+    turnoFilter:activeMap, // only show on current turno
+  });
+  document.getElementById('text-input').value='';
+  cancelTextDialog();
+  redrawMainMap();
+}
+function cancelTextDialog(){
+  document.getElementById('text-dialog').classList.remove('open');
+}
+
+// ─── CLEAR ALL USER ELEMENTS ────────────────────────────────────
+// ─── BORRAR: 4 acciones independientes ─────────────────────────
+
+// 1) Vacía solo el cuadro de pegar (no toca etiquetas ni lo agregado al mapa)
+function clearPasteBox(){
+  const ta=document.getElementById("paste-all");
+  if(ta)ta.value="";
+  showStatus("✓ Cuadro de pegar vacío");
+}
+
+// 2) Borra las etiquetas de los 3 turnos (mapa + tarjetas de "Datos de turno")
+function clearEtiquetas(){
+  const hayDatosTurno=["T1","T2","T3"].some(t=>state[t].vals&&state[t].vals.some(v=>v));
+  if(!hayDatosTurno){alert("No hay etiquetas de turno para borrar.");return;}
+  if(!confirm(
+    "Esto va a borrar las etiquetas de los 3 turnos:\n\n"+
+    "• Lo dibujado en el mapa (zonas, naves, etc.)\n"+
+    "• Las tarjetas de \"Datos de turno\" (2do, 3er y 1er turno)\n\n"+
+    "¿Continuar?"
+  ))return;
+  ["T1","T2","T3"].forEach(t=>{
+    state[t].vals=[];
+    renderTags(t,[]);
+  });
+  redrawMainMap();
+}
+
+// 3) Borra solo lo que agregaste manualmente en el mapa (textos, riesgos, imágenes)
+function clearUserElements(){
+  if(userElements.length===0){alert("No hay textos, riesgos ni imágenes agregadas para borrar.");return;}
+  if(!confirm(`¿Eliminar ${userElements.length} elemento(s) del mapa (textos, riesgos e imágenes)?`))return;
+  userElements.length=0;
+  redrawMainMap();
+}
+
+// 4) Borra absolutamente todo: elementos + etiquetas + cuadro de pegar
+function clearTodo(){
+  const ta=document.getElementById("paste-all");
+  const hayElementos=userElements.length>0;
+  const hayDatosTurno=["T1","T2","T3"].some(t=>state[t].vals&&state[t].vals.some(v=>v));
+  const hayPegado=ta&&ta.value.trim().length>0;
+  if(!hayElementos&&!hayDatosTurno&&!hayPegado){alert("No hay nada para borrar.");return;}
+  if(!confirm(
+    "Esto va a borrar TODO lo siguiente:\n\n"+
+    "• Los textos, riesgos e imágenes que agregaste en el mapa\n"+
+    "• Las etiquetas de zona/nave de los 3 turnos (lo que ves dibujado en el mapa)\n"+
+    "• Las tarjetas de \"Datos de turno\" (2do, 3er y 1er turno)\n"+
+    "• El cuadro de pegar\n\n"+
+    "¿Continuar?"
+  ))return;
+
+  userElements.length=0;
+
+  ["T1","T2","T3"].forEach(t=>{
+    state[t].vals=[];
+    renderTags(t,[]);
+  });
+
+  if(ta)ta.value="";
+
+  redrawMainMap();
+}
+
+// ─── AGREGAR SEÑAL DE RIESGO ───────────────────────────────────
+function addRiskElement(riskId){
+  closeCtxMenu();
+  userElements.push({
+    id:nextElId++, type:'risk', riskId,
+    px:pendingPos?.mapX??400, py:pendingPos?.mapY??300,
+    w:55, h:55, turnoFilter:activeMap,
+  });
+  redrawMainMap();
+}
+
+// ─── AGREGAR IMAGEN (predeterminada o importada) ───────────────
+function addImageElement(imageId){
+  closeCtxMenu();
+  userElements.push({
+    id:nextElId++, type:'image', imageId,
+    px:pendingPos?.mapX??400, py:pendingPos?.mapY??300,
+    w:70, h:70, turnoFilter:activeMap,
+  });
+  redrawMainMap();
+}
+
+// ─── IMPORTAR IMAGEN PROPIA (solo para la sección Imágenes) ────
+function handleImageUpload(e){
+  const file=e.target.files&&e.target.files[0];
+  e.target.value=''; // permite volver a elegir el mismo archivo después
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>redrawMainMap();
+    img.src=ev.target.result;
+    imageDefs.push({id:'custom_'+Date.now(),src:ev.target.result,img,label:'Personalizada',custom:true});
+    populateImageGrid();
+  };
+  reader.readAsDataURL(file);
+}
+function removeImageDef(id,ev){
+  ev.stopPropagation();
+  imageDefs=imageDefs.filter(d=>d.id!==id);
+  populateImageGrid();
+  scheduleSave();
+}
+
+// Double-click user element to delete
+document.getElementById('main-cv').addEventListener('dblclick',e=>{
+  const cv=document.getElementById('main-cv');
+  const rect=cv.getBoundingClientRect();
+  const cx=(e.clientX-rect.left)*(cv.width/rect.width);
+  const cy=(e.clientY-rect.top)*(cv.height/rect.height);
+  const hit=hitTest(cx,cy,cv);
+  if(hit&&hit.type==='user'){
+    const idx=userElements.findIndex(el=>el.id===hit.id);
+    if(idx!==-1){
+      userElements.splice(idx,1);
+      redrawMainMap();
+    }
+  }
+});
+
+// ─── GRILLA DE RIESGOS (8 fijos, sin opción de subir) ──────────
+function populateRiskGrid(){
+  const grid=document.getElementById('ctx-risks-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  riskDefs.forEach(def=>{
+    const btn=document.createElement('div');
+    btn.className='risk-btn';
+    btn.title=def.label;
+    btn.onclick=()=>addRiskElement(def.id);
+    const img=document.createElement('img');
+    img.src=def.src;
+    img.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+    img.onerror=()=>{img.style.display='none';};
+    btn.innerHTML=`<div class="risk-thumb"></div><div class="risk-lbl">${def.label}</div>`;
+    btn.querySelector('.risk-thumb').appendChild(img);
+    grid.appendChild(btn);
+  });
+}
+
+// ─── GRILLA DE IMÁGENES (3 predeterminadas + botón para subir) ─
+function populateImageGrid(){
+  const grid=document.getElementById('ctx-images-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  imageDefs.forEach(def=>{
+    const btn=document.createElement('div');
+    btn.className='risk-btn';
+    btn.title=def.label;
+    btn.onclick=()=>addImageElement(def.id);
+    const img=document.createElement('img');
+    img.src=def.src;
+    img.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+    img.onerror=()=>{img.style.display='none';};
+    btn.innerHTML=`<div class="risk-thumb"></div><div class="risk-lbl">${def.label}</div>`;
+    btn.querySelector('.risk-thumb').appendChild(img);
+    if(def.custom){
+      const del=document.createElement('button');
+      del.className='risk-del';del.textContent='✕';del.title='Quitar esta imagen importada';
+      del.onclick=(ev)=>removeImageDef(def.id,ev);
+      btn.appendChild(del);
+    }
+    grid.appendChild(btn);
+  });
+  // Botón para importar una imagen propia
+  const addBtn=document.createElement('div');
+  addBtn.className='risk-btn risk-add-btn';
+  addBtn.title='Importar imagen propia';
+  addBtn.onclick=()=>document.getElementById('image-upload-input').click();
+  addBtn.innerHTML=`<div class="risk-thumb">+</div><div class="risk-lbl">Subir</div>`;
+  grid.appendChild(addBtn);
+}
+
+// ─── DRAW ENGINE ─────────────────────────────────────────────
+function drawOnCtx(ctx,t,W,H){
+  const sx=W/IMG_W,sy=H/IMG_H;
+  const px=v=>v*sx, py=v=>v*sy;
+  const BW=px(84),BH=py(26);
+  const vals=state[t].vals;
+
+  // Flow arrows (hasta 3 líneas independientes por ubicación, cada una con su propio color)
+  // Se dibujan PRIMERO para que queden detrás de las etiquetas de zona, naves, textos e imágenes.
+  Object.entries(PIER_BOUNDS).forEach(([key,b])=>{
+    const lines=state[t].flujos[key];
+    if(!lines||lines.length===0)return;
+    const offsets=FLOW_LINE_OFFSETS[lines.length]||[0];
+    lines.forEach((line,idx)=>{
+      const yOff=offsets[idx]!==undefined?offsets[idx]:0;
+      const col=ARROW_COLORS[line.colorIdx]||ARROW_COLORS[0];
+      drawFlujo(ctx,line.dir,px(b.x0),px(b.x1),py(b.y+yOff),px,py,col);
+    });
+  });
+
+  // Zone labels (with drag offsets)
+  ZONAS.forEach((z,i)=>{
+    const val=vals[i]||"";if(!val)return;
+    const col=ZONE_COLORS[state[t].zoneColorIdx[i]];
+    const off=state[t].zoneOffsets[i];
+    const x=px(z.px+off.dx),y=py(z.py+off.dy);
+    ctx.save();
+    ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=px(4);ctx.shadowOffsetY=py(1.5);
+    ctx.fillStyle=col.bg;ctx.beginPath();ctx.roundRect(x,y,BW,BH,px(4));ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+    ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=px(.6);ctx.stroke();
+    ctx.fillStyle=col.text;ctx.font=`bold ${px(9.5)}px Arial`;
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.shadowColor="rgba(0,0,0,.7)";ctx.shadowBlur=px(2);
+    ctx.fillText(val,x+BW/2,y+BH/2);ctx.restore();
+  });
+
+  // Vessels (with drag offsets)
+  const navAt=vals[9]||"",navAu=vals[10]||"";
+  if(navAt){const mn=navAt.startsWith("MN/");drawNave(ctx,navAt,mn?NAVE_POS.at_mn:NAVE_POS.at_txt,px,py,"SITIO 3",mn,state[t].siteColorIdx.at,state[t].siteOffsets.at);}
+  if(navAu){const mn=navAu.startsWith("MN/");drawNave(ctx,navAu,mn?NAVE_POS.au_mn:NAVE_POS.au_txt,px,py,"SITIO 4",mn,state[t].siteColorIdx.au,state[t].siteOffsets.au);}
+
+  // User elements (text & risks)
+  userElements.forEach(el=>{
+    if(el.turnoFilter!=='all'&&el.turnoFilter!==t)return;
+    const x=px(el.px),y=py(el.py),w=px(el.w),h=py(el.h);
+    if(el.type==='text'){
+      // Same style as zone labels, cycles through green/cyan/red. Fuente escala con el tamaño del cuadro.
+      const col=ZONE_COLORS[el.colorIdx||0];
+      const fs=Math.max(7,Math.min(22,el.h*0.42));
+      ctx.save();
+      ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=px(4);ctx.shadowOffsetY=py(1.5);
+      ctx.fillStyle=col.bg;ctx.beginPath();ctx.roundRect(x,y,w,h,px(4));ctx.fill();
+      ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+      ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=px(.6);ctx.stroke();
+      ctx.fillStyle=col.text;ctx.font=`bold ${px(fs)}px Arial`;
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.shadowColor="rgba(0,0,0,.7)";ctx.shadowBlur=px(2);
+      ctx.fillText(el.text,x+w/2,y+h/2);ctx.restore();
+    } else if(el.type==='risk'){
+      const idx=riskDefs.findIndex(d=>d.id===el.riskId);
+      const def=idx>=0?riskDefs[idx]:null;
+      const rc=def?def.img:null;
+      if(rc&&rc.complete&&rc.naturalWidth>0){
+        ctx.save();ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=px(4);
+        ctx.drawImage(rc,x,y,w,h);ctx.restore();
+      } else {
+        ctx.save();
+        ctx.fillStyle='rgba(230,60,0,.88)';ctx.strokeStyle='#ff8844';ctx.lineWidth=px(1.2);
+        ctx.beginPath();ctx.roundRect(x,y,w,h,px(4));ctx.fill();ctx.stroke();
+        ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(px(10),w*0.32)}px Arial`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(`R${idx>=0?idx+1:"?"}`,x+w/2,y+h/2);ctx.restore();
+      }
+      // Label con el número de riesgo (badge esquina sup-izq, escala con el tamaño)
+      const bw=Math.max(px(14),w*0.3),bh=Math.max(py(11),h*0.24),bfs=bh*0.55;
+      ctx.save();
+      ctx.fillStyle='rgba(200,40,0,.85)';
+      ctx.beginPath();ctx.roundRect(x,y+h,bw,bh,px(2));ctx.fill();
+      ctx.fillStyle='#fff';ctx.font=`bold ${bfs}px Arial`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(`R${idx>=0?idx+1:"?"}`,x+bw/2,y+h+bh/2);ctx.restore();
+    } else if(el.type==='image'){
+      // Imagen simple (predeterminada o importada) — sin numeración ni badge de riesgo
+      const def=imageDefs.find(d=>d.id===el.imageId);
+      const rc=def?def.img:null;
+      ctx.save();
+      if(rc&&rc.complete&&rc.naturalWidth>0){
+        ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=px(4);
+        ctx.drawImage(rc,x,y,w,h);
+      } else {
+        ctx.fillStyle='rgba(40,60,90,.85)';ctx.strokeStyle='#4a7aaa';ctx.lineWidth=px(1.2);
+        ctx.beginPath();ctx.roundRect(x,y,w,h,px(4));ctx.fill();ctx.stroke();
+        ctx.fillStyle='#c8ddf8';ctx.font=`${Math.max(px(9),w*0.12)}px Arial`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('…',x+w/2,y+h/2);
+      }
+      ctx.restore();
+    }
+  });
+
+  // Title bar
+  const tLabel={T1:"2do Turno",T2:"3er Turno",T3:"1er Turno"};
+  const tCol={T1:"#314569",T2:"#31784b",T3:"#0ead86"};
+  const fecha=getFechaForTurno(t);
+  const txt=`PLANO PRÓXIMAS FAENAS – ${tLabel[t]}${fecha?" – "+fecha:""}`;
+  const tx=px(250),ty=py(4),tw=px(690),th=py(28);
+  ctx.save();
+  ctx.fillStyle=tCol[t]+"ee";ctx.beginPath();ctx.roundRect(tx,ty,tw,th,px(5));ctx.fill();
+  ctx.fillStyle="#fff";ctx.font=`bold ${px(13)}px Arial`;
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(txt,tx+tw/2,ty+th/2);
+  ctx.restore();
+}
+
+function drawNave(ctx,val,pos,px,py,siteLabel,isMN,siteColIdx,off){
+  const label=isMN?val.substring(3):val;
+  const dx=off?off.dx:0,dy=off?off.dy:0;
+  const x=px(pos.px+dx),y=py(pos.py+dy),nw=px(pos.w),nh=py(pos.h);
+  ctx.save();
+  if(isMN&&BUQUE_IMG.complete&&BUQUE_IMG.naturalWidth>0){
+    ctx.shadowColor="rgba(0,0,0,.6)";ctx.shadowBlur=px(6);ctx.shadowOffsetY=py(2);
+    ctx.fillStyle="rgba(8,18,38,.78)";ctx.beginPath();ctx.roundRect(x,y,nw,nh,px(4));ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+    ctx.drawImage(BUQUE_IMG,x+px(3),y+py(4),nw-px(6),nh-py(10));
+    ctx.fillStyle="rgba(0,0,0,.72)";ctx.beginPath();ctx.roundRect(x,y+nh-py(16),nw,py(16),px(2));ctx.fill();
+    ctx.fillStyle="#e8f4ff";ctx.font=`bold ${px(9)}px Arial`;
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.shadowColor="rgba(0,0,0,.9)";ctx.shadowBlur=px(2);
+    ctx.fillText(label,x+nw/2,y+nh-py(8));
+  } else {
+    const sc=SITE_COLORS[siteColIdx||0];
+    ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=px(5);ctx.shadowOffsetY=py(1.5);
+    ctx.fillStyle=sc.bg;ctx.strokeStyle=sc.border;ctx.lineWidth=px(1.2);
+    ctx.beginPath();ctx.roundRect(x,y,nw,nh,px(4));ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;ctx.stroke();
+    ctx.fillStyle=sc.text;ctx.font=`bold ${px(11)}px Arial`;
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.shadowColor="rgba(0,0,0,.7)";ctx.shadowBlur=px(2);
+    ctx.fillText(label,x+nw/2,y+nh/2);
+  }
+  const bw=px(52),bh=py(15);
+  ctx.fillStyle="rgba(0,0,0,.55)";ctx.beginPath();ctx.roundRect(x,y,bw,bh,px(2));ctx.fill();
+  ctx.fillStyle="#90b8e8";ctx.font=`bold ${px(7)}px Arial`;
+  ctx.textAlign="left";ctx.textBaseline="middle";ctx.shadowBlur=0;
+  ctx.fillText(siteLabel,x+px(4),y+bh/2);ctx.restore();
+}
+
+function drawFlujo(ctx,dir,x0,x1,cy,px,py,color){
+  const ah=px(9);
+  const arrowAtStart=(dir==="rtl"||dir==="both"); // punta en x0 (izquierda)
+  const arrowAtEnd=(dir==="ltr"||dir==="both");   // punta en x1 (derecha)
+  ctx.save();
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=px(2.2);
+  ctx.globalAlpha=.82;ctx.shadowColor=color;ctx.shadowBlur=px(4);
+  ctx.setLineDash([px(10),px(6)]);
+  const lx0=arrowAtStart?x0+ah*0.8:x0;
+  const lx1=arrowAtEnd?x1-ah*0.8:x1;
+  ctx.beginPath();ctx.moveTo(lx0,cy);ctx.lineTo(lx1,cy);ctx.stroke();
+  ctx.setLineDash([]);ctx.shadowBlur=px(3);
+  if(arrowAtEnd){
+    ctx.beginPath();ctx.moveTo(x1,cy);ctx.lineTo(x1-ah,cy-ah*.44);ctx.lineTo(x1-ah,cy+ah*.44);
+    ctx.closePath();ctx.fill();
+  }
+  if(arrowAtStart){
+    ctx.beginPath();ctx.moveTo(x0,cy);ctx.lineTo(x0+ah,cy-ah*.44);ctx.lineTo(x0+ah,cy+ah*.44);
+    ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ─── MAP RENDERING ────────────────────────────────────────────
+function redrawMainMap(){
+  const cv=document.getElementById("main-cv");
+  const ctnr=document.getElementById("map-container");
+  const W=ctnr.clientWidth,H=ctnr.clientHeight;
+  if(!W||!H)return;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext("2d");
+  ctx.clearRect(0,0,W,H);
+  const r=getMapRect(W,H);
+  if(BASEMAP.complete&&BASEMAP.naturalWidth>0)ctx.drawImage(BASEMAP,r.x,r.y,r.w,r.h);
+  else{ctx.fillStyle="#d4d0c8";ctx.fillRect(r.x,r.y,r.w,r.h);}
+  ctx.save();ctx.translate(r.x,r.y);drawOnCtx(ctx,activeMap,r.w,r.h);ctx.restore();
+  updateFooter();
+  scheduleSave(); // guarda automáticamente en este navegador (localStorage), sin recargar la página
+}
+
+// ─── GUARDADO / CARGA AUTOMÁTICA (localStorage del navegador) ─────────────
+// Nota: esto guarda los datos SOLO en el navegador/dispositivo donde se usa la página.
+// No se comparte entre distintas personas ni distintas computadoras.
+const STORAGE_KEY="plano_faenas_iti_v1";
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveState,300);
+}
+function saveState(){
+  try{
+    const data={
+      version:1,
+      fecha:document.getElementById("fecha")?.value||"",
+      state, // T1/T2/T3: vals, flujos, colores, posiciones de zonas/naves
+      userElements, // textos, riesgos e imágenes colocados en el mapa
+      nextElId,
+      // Solo se guardan las imágenes IMPORTADAS por el usuario (las 3 predeterminadas ya están en el código)
+      customImages:imageDefs.filter(d=>d.custom).map(d=>({id:d.id,src:d.src,label:d.label})),
+    };
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  }catch(e){
+    console.warn("No se pudo guardar en este navegador (posiblemente localStorage lleno o deshabilitado):",e);
+  }
+}
+function loadState(){
+  let raw;
+  try{ raw=localStorage.getItem(STORAGE_KEY); }catch(e){ return; }
+  if(!raw)return;
+  let data;
+  try{ data=JSON.parse(raw); }catch(e){ return; }
+
+  if(data.fecha)document.getElementById("fecha").value=data.fecha;
+
+  if(data.state){
+    ["T1","T2","T3"].forEach(t=>{
+      if(data.state[t])Object.assign(state[t],data.state[t]);
+    });
+  }
+  if(Array.isArray(data.userElements)){
+    userElements.length=0;
+    data.userElements.forEach(el=>userElements.push(el));
+  }
+  if(typeof data.nextElId==="number")nextElId=Math.max(nextElId,data.nextElId);
+
+  if(Array.isArray(data.customImages)){
+    data.customImages.forEach(d=>{
+      const img=new Image();
+      img.onload=()=>redrawMainMap();
+      img.src=d.src;
+      imageDefs.push({id:d.id,src:d.src,img,label:d.label,custom:true});
+    });
+  }
+}
+
+function showMapTab(t){
+  activeMap=t;
+  ["T1","T2","T3"].forEach(x=>{
+    document.getElementById("mtab-"+x).className="map-tab"+(x===t?" act-"+x.toLowerCase():"");
+  });
+  redrawMainMap();
+}
+function updateFooter(){
+  const hrs={T1:"15:30–23:30",T2:"23:00–06:30",T3:"08:00–15:30"};
+  const v=state[activeMap].vals;
+  const ships=[v[9],v[10]].filter(Boolean);
+  document.getElementById("map-finfo").textContent=
+    [getFechaForTurno(activeMap),hrs[activeMap],...ships].filter(Boolean).join(" · ")||"Sin datos";
+}
+
+// ─── MODAL: MAPA ────────────────────────────────────────────────────
+function expandModal(){
+  const lab={T1:"2do Turno – 15:30–23:30",T2:"3er Turno – 23:00–06:30",T3:"1er Turno – 08:00–15:30"};
+  document.getElementById("modal-title").textContent=lab[activeMap];
+  document.getElementById("modal").classList.add("open");
+  setTimeout(redrawModal,80);
+}
+function redrawModal(){
+  const cv=document.getElementById("modal-cv");
+  const W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext("2d");ctx.clearRect(0,0,W,H);
+  if(BASEMAP.complete&&BASEMAP.naturalWidth>0)ctx.drawImage(BASEMAP,0,0,W,H);
+  drawOnCtx(ctx,activeMap,W,H);
+  drawInlineMapLegend(ctx,W,H);
+}
+function drawInlineMapLegend(ctx,W,H){
+  const fs=Math.max(9,Math.round(W*0.009)),dot=fs+1,lhh=fs+6,pad=7;
+  const lw=fs*9+pad*2,lx=W-lw-8,ly=8;
+  const zones=[{c:"#92D050",l:"Almacén"},{c:"#FF4444",l:"CFS/Loma"},{c:"#00B0F0",l:"Patio"},{c:"#1a3a5a",l:"Nave"}];
+  const arrows=[{c:"#2563eb",l:"Tráns.Nave"},{c:"#f59e0b",l:"Tráns.Ext."},{c:"#16a34a",l:"Tráns.Bus"}];
+  const lh=lhh*(zones.length+arrows.length+2)+pad*2+20;
+  ctx.save();
+  ctx.fillStyle="rgba(11,15,26,.86)";ctx.beginPath();ctx.roundRect(lx,ly,lw,lh,6);ctx.fill();
+  ctx.strokeStyle="rgba(80,80,120,.6)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(lx,ly,lw,lh,6);ctx.stroke();
+  let iy=ly+pad;
+  ctx.fillStyle="#f0c060";ctx.font=`bold ${fs+1}px Arial`;ctx.textAlign="center";ctx.textBaseline="top";
+  ctx.fillText("LEYENDA",lx+lw/2,iy);iy+=lhh+2;
+  function sep(){ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(lx+pad,iy);ctx.lineTo(lx+lw-pad,iy);ctx.stroke();iy+=4;}
+  sep();
+  zones.forEach(z=>{
+    ctx.fillStyle=z.c;ctx.beginPath();ctx.roundRect(lx+pad,iy,dot,dot,2);ctx.fill();
+    ctx.fillStyle="#c8d0e8";ctx.font=`${fs}px Arial`;ctx.textAlign="left";ctx.textBaseline="top";
+    ctx.fillText(z.l,lx+pad+dot+4,iy);iy+=lhh;
+  });
+  sep();
+  arrows.forEach(a=>{
+    ctx.strokeStyle=a.c;ctx.lineWidth=2.5;ctx.globalAlpha=.85;ctx.setLineDash([3,2]);
+    ctx.beginPath();ctx.moveTo(lx+pad,iy+dot*.5);ctx.lineTo(lx+pad+dot*1.4,iy+dot*.5);ctx.stroke();
+    ctx.setLineDash([]);ctx.globalAlpha=1;ctx.fillStyle=a.c;ctx.beginPath();
+    ctx.moveTo(lx+pad+dot*1.4,iy+dot*.5);ctx.lineTo(lx+pad+dot*.6,iy);ctx.lineTo(lx+pad+dot*.6,iy+dot);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle="#c8d0e8";ctx.font=`${fs}px Arial`;ctx.textAlign="left";ctx.textBaseline="top";
+    ctx.fillText(a.l,lx+pad+dot*1.6+3,iy);iy+=lhh;
+  });
+  ctx.restore();
+}
+function closeModal(){document.getElementById("modal").classList.remove("open");}
+function closeModalBg(e){if(e.target===document.getElementById("modal"))closeModal();}
+
+// ─── DESCARGAR MAPAS COMO IMAGEN ──────────────────────────────────────────
+const TURNO_FILE_LABEL={T1:"2do_turno",T2:"3er_turno",T3:"1er_turno"};
+
+function toggleDownloadMenu(e){
+  e.stopPropagation();
+  document.getElementById('download-menu').classList.toggle('open');
+}
+document.addEventListener('click',()=>{
+  document.getElementById('download-menu')?.classList.remove('open');
+});
+
+// Dibuja un turno completo (mapa + elementos + leyenda) en un canvas nuevo, en alta resolución.
+function renderTurnoToCanvas(t,scale=2){
+  const w=IMG_W*scale,h=IMG_H*scale;
+  const cv=document.createElement('canvas');
+  cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');
+  if(BASEMAP.complete&&BASEMAP.naturalWidth>0)ctx.drawImage(BASEMAP,0,0,w,h);
+  else{ctx.fillStyle='#d4d0c8';ctx.fillRect(0,0,w,h);}
+  drawOnCtx(ctx,t,w,h);
+  drawInlineMapLegend(ctx,w,h);
+  return cv;
+}
+
+function fechaParaArchivo(){
+  const v=document.getElementById('fecha').value;
+  return v||new Date().toISOString().split('T')[0];
+}
+
+function triggerDownload(canvas,filename){
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+  },'image/png');
+}
+
+// Opción 1: solo el turno que está viendo ahora
+function downloadTurnoActual(){
+  document.getElementById('download-menu').classList.remove('open');
+  const cv=renderTurnoToCanvas(activeMap);
+  triggerDownload(cv,`plano_${TURNO_FILE_LABEL[activeMap]}_${fechaParaArchivo()}.png`);
+}
+
+// Opción 2: los 3 turnos, uno abajo del otro, en una sola imagen
+function downloadTodosCombinados(){
+  document.getElementById('download-menu').classList.remove('open');
+  const scale=2,w=IMG_W*scale,h=IMG_H*scale,gap=Math.round(h*0.02);
+  const big=document.createElement('canvas');
+  big.width=w;big.height=h*3+gap*2;
+  const bctx=big.getContext('2d');
+  bctx.fillStyle='#0b0f1a';bctx.fillRect(0,0,big.width,big.height);
+  ['T1','T2','T3'].forEach((t,i)=>{
+    const cv=renderTurnoToCanvas(t,scale);
+    bctx.drawImage(cv,0,i*(h+gap));
+  });
+  triggerDownload(big,`plano_3_turnos_${fechaParaArchivo()}.png`);
+}
+
+// Opción 3: los 3 turnos, cada uno como archivo separado
+function downloadTodosSeparados(){
+  document.getElementById('download-menu').classList.remove('open');
+  ['T1','T2','T3'].forEach((t,i)=>{
+    setTimeout(()=>{
+      const cv=renderTurnoToCanvas(t);
+      triggerDownload(cv,`plano_${TURNO_FILE_LABEL[t]}_${fechaParaArchivo()}.png`);
+    },i*350); // separado en el tiempo para que el navegador no bloquee las descargas múltiples
+  });
+}
+
+// ─── MODAL: EXCEL ────────────────────────────────────────────────────
+function expandExcelModal(){
+  const modal=document.getElementById('excel-modal');
+  const frame=document.getElementById('excel-modal-frame');
+  const wrap=document.querySelector('#excel-modal .excel-modal-map');
+  modal.classList.add('open');
+  // Importante: el iframe se carga DESPUÉS de que el modal ya esté visible, a pantalla completa,
+  // y con su tamaño en píxeles ya fijado. Si Excel Online empieza a cargar dentro de un
+  // contenedor todavía oculto o chico, detecta ese tamaño al inicio y se queda pegado en su
+  // vista compacta aunque el contenedor después sea grande. Por eso esperamos dos frames
+  // (para que el navegador termine de calcular el layout a pantalla completa) antes de asignar el src.
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      if(wrap){
+        frame.style.width=wrap.clientWidth+"px";
+        frame.style.height=wrap.clientHeight+"px";
+        frame.setAttribute("width",wrap.clientWidth);
+        frame.setAttribute("height",wrap.clientHeight);
+      }
+      if(!frame.getAttribute('src')&&EXCEL_URL) frame.src=EXCEL_URL;
+    });
+  });
+}
+function closeExcelModal(){document.getElementById('excel-modal').classList.remove('open');}
+function closeExcelModalBg(e){if(e.target===document.getElementById('excel-modal'))closeExcelModal();}
+
+// ─── CLIPBOARD / PASTE ───────────────────────────────────────
+async function tryClipboard(){
+  const ta=document.getElementById('paste-all');
+  ta.focus();
+  try{
+    const text=await navigator.clipboard.readText();
+    if(text){
+      ta.value=text;
+      handlePasteAll();
+      showStatus("✓ Pegado desde portapapeles");
+    }
+  }catch(e){
+    showStatus("Usa Ctrl+V con el cursor en el área de texto");
+  }
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const ta=document.getElementById("paste-all");
+  if(!ta)return;
+  ta.addEventListener("paste",function(e){
+    e.preventDefault();
+    const cd=e.clipboardData||window.clipboardData;if(!cd)return;
+    let text=(cd.getData("text/plain")||"").trim();
+    if(!text||!text.includes("\t")){const h=cd.getData("text/html")||"";if(h)text=htmlTableToTSV(h)||text;}
+    if(text){
+      const s=ta.selectionStart,en=ta.selectionEnd;
+      ta.value=ta.value.slice(0,s)+text+ta.value.slice(en);
+      ta.selectionStart=ta.selectionEnd=s+text.length;
+      handlePasteAll();
+    }
+  });
+});
+
+function htmlTableToTSV(h){
+  const d=document.createElement("div");d.innerHTML=h;
+  const rows=d.querySelectorAll("tr");
+  if(rows.length)return Array.from(rows).map(r=>
+    Array.from(r.querySelectorAll("td,th")).map(c=>(c.innerText||c.textContent||"").replace(/\r?\n/g," ").trim()).join("\t")
+  ).filter(r=>r.split("\t").some(c=>c.length>0)).join("\n");
+  return(d.innerText||d.textContent||"").trim();
+}
+
+function handlePasteAll(){
+  const raw=document.getElementById("paste-all").value;
+  // Do NOT use .trim() — it strips leading tabs which represent empty leading cells,
+  // shifting the column positions. Only strip \r and filter truly blank lines.
+  const rows=raw.split(/\r?\n/)
+    .map(r=>r.replace(/\r/g,""))
+    .filter(r=>r.replace(/\t/g,"").length>0);
+  const turnos=["T1","T2","T3"];
+  if(rows.length>=3){rows.slice(0,3).forEach((r,i)=>parseRow(turnos[i],r));showStatus("✓ T1+T2+T3 actualizados");}
+  else if(rows.length===2){rows.forEach((r,i)=>parseRow(turnos[i],r));showStatus("✓ T1+T2 actualizados");}
+  else if(rows.length===1){parseRow("T1",rows[0]);showStatus("✓ T1 actualizado");}
+  redrawMainMap();
+}
+function showStatus(msg){
+  const el=document.getElementById('paste-status');
+  el.textContent=msg;
+  setTimeout(()=>{el.textContent='';},3000);
+}
+
+function parseRow(t,raw){
+  const parts=raw.split("\t").map(v=>v.trim().replace(/\r?\n/g,""));
+  state[t].vals=parts; renderTags(t,parts);
+}
+
+// ─── TAGS ────────────────────────────────────────────────────
+function renderTags(t,parts){
+  const el=document.getElementById("tags-"+t);
+  el.innerHTML="";let hasContent=false;
+  parts.forEach((v,i)=>{
+    if(!v)return;hasContent=true;
+    const lbl=i<9?ZONAS[i].name:i===9?"Sitio 3":"Sitio 4";
+    const span=document.createElement("span");
+    span.className="ptag";span.textContent=`${lbl}: ${v}`;
+    if(i<9){
+      const col=ZONE_COLORS[state[t].zoneColorIdx[i]];
+      span.style.background=col.bg;span.style.color=col.text;
+      span.title="Clic → cambiar color zona";
+      span.onclick=()=>{state[t].zoneColorIdx[i]=(state[t].zoneColorIdx[i]+1)%ZONE_COLORS.length;renderTags(t,parts);redrawMainMap();};
+    } else {
+      const siteKey=i===9?"at":"au";const isMN=v.startsWith("MN/");
+      if(isMN){span.style.background="#1a3060";span.dataset.fixed=1;}
+      else{
+        const sc=SITE_COLORS[state[t].siteColorIdx[siteKey]];
+        span.style.background=sc.border;span.style.color=sc.text;
+        span.title="Clic → cambiar color sitio";
+        span.onclick=()=>{state[t].siteColorIdx[siteKey]=(state[t].siteColorIdx[siteKey]+1)%SITE_COLORS.length;renderTags(t,parts);redrawMainMap();};
+      }
+    }
+    el.appendChild(span);
+  });
+  if(!hasContent)el.innerHTML='<span class="dc-empty">Sin datos</span>';
+}
+
+// ─── TRÁNSITO: hasta 3 líneas independientes por ubicación (dirección + color c/u) ──
+const FLUJO_ICONS={ltr:"→",rtl:"←",both:"↔"};
+const FLUJO_TIPS={ltr:"Izquierda → Derecha (clic para cambiar)",rtl:"Derecha → Izquierda (clic para cambiar)",
+                   both:"Ambos sentidos (clic para cambiar)"};
+const FLUJO_DIR_CYCLE=["ltr","rtl","both"];
+
+function buildFlujoGrid(){
+  const locs=["pier3","pasillo","pier4"];
+  ["T1","T2","T3"].forEach(t=>{
+    locs.forEach(loc=>renderFlujoCell(t,loc));
+  });
+}
+
+function renderFlujoCell(t,loc){
+  const container=document.getElementById(`fl-${t}-${loc}`);
+  if(!container)return;
+  container.className="fbtn-g-multi";
+  container.innerHTML="";
+  const lines=state[t].flujos[loc];
+
+  lines.forEach((line,idx)=>{
+    const row=document.createElement("div");
+    row.className="flow-line-row";
+
+    const dirBtn=document.createElement("button");
+    dirBtn.className="fbtn fbtn-dir ac-"+line.dir;
+    dirBtn.textContent=FLUJO_ICONS[line.dir];
+    dirBtn.title=FLUJO_TIPS[line.dir];
+    dirBtn.onclick=()=>{
+      const i=FLUJO_DIR_CYCLE.indexOf(line.dir);
+      line.dir=FLUJO_DIR_CYCLE[(i+1)%FLUJO_DIR_CYCLE.length];
+      renderFlujoCell(t,loc);
+      redrawMainMap();
+    };
+
+    const cc=document.createElement("button");
+    cc.className="fbtn cc";
+    cc.textContent="●";
+    cc.style.background=ARROW_COLORS[line.colorIdx];
+    cc.style.color="#fff";
+    cc.title=`Color: ${ARROW_LABELS[line.colorIdx]} (clic para cambiar)`;
+    cc.onclick=()=>{
+      line.colorIdx=(line.colorIdx+1)%ARROW_COLORS.length;
+      renderFlujoCell(t,loc);
+      redrawMainMap();
+    };
+
+    const rm=document.createElement("button");
+    rm.className="flow-line-remove";
+    rm.textContent="✕";
+    rm.title="Quitar esta línea";
+    rm.onclick=()=>{
+      lines.splice(idx,1);
+      renderFlujoCell(t,loc);
+      redrawMainMap();
+    };
+
+    row.appendChild(dirBtn);row.appendChild(cc);row.appendChild(rm);
+    container.appendChild(row);
+  });
+
+  if(lines.length<3){
+    const addBtn=document.createElement("button");
+    addBtn.className="flow-line-add";
+    addBtn.textContent="+ línea";
+    addBtn.title="Agregar otra línea de flujo (máx. 3)";
+    addBtn.onclick=()=>{
+      lines.push({dir:"ltr",colorIdx:0});
+      renderFlujoCell(t,loc);
+      redrawMainMap();
+    };
+    container.appendChild(addBtn);
+  }
+}
+
+// Migra datos guardados en un formato viejo (una sola línea como texto) al nuevo formato de arrays.
+function normalizeFlujoState(){
+  ["T1","T2","T3"].forEach(t=>{
+    const f=state[t].flujos||{};
+    const oldColorIdx=state[t].arrowColorIdx;
+    ["pier3","pasillo","pier4"].forEach(loc=>{
+      const val=f[loc];
+      if(Array.isArray(val)){
+        f[loc]=val
+          .filter(l=>l&&FLUJO_DIR_CYCLE.includes(l.dir))
+          .slice(0,3)
+          .map(l=>({dir:l.dir,colorIdx:(typeof l.colorIdx==="number"?((l.colorIdx%ARROW_COLORS.length)+ARROW_COLORS.length)%ARROW_COLORS.length:0)}));
+      } else if(typeof val==="string"&&val!=="none"&&FLUJO_DIR_CYCLE.includes(val)){
+        const ci=(oldColorIdx&&typeof oldColorIdx[loc]==="number")?oldColorIdx[loc]:0;
+        f[loc]=[{dir:val,colorIdx:ci}];
+      } else {
+        f[loc]=[];
+      }
+    });
+    state[t].flujos=f;
+    delete state[t].arrowColorIdx; // el color ahora vive en cada línea, ya no por ubicación
+  });
+}
+
+// ─── DATE ────────────────────────────────────────────────────
+function getFechaForTurno(t){
+  const v=document.getElementById("fecha").value;if(!v)return"";
+  let date=new Date(v+"T12:00:00");
+  if(t==="T3")date.setDate(date.getDate()+1);
+  const mm=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  return`${date.getDate()} ${mm[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+window.addEventListener("load",()=>{
+  document.getElementById("fecha").value=new Date().toISOString().split("T")[0];
+  loadState(); // recupera lo guardado en este navegador (si existe), puede pisar la fecha de arriba
+  normalizeFlujoState(); // asegura que los flujos queden en el formato nuevo (array de líneas)
+  buildFlujoGrid();
+  initCanvasEvents();
+  populateRiskGrid();  // carga r1..r8 predeterminados (fijos)
+  populateImageGrid(); // carga img1/img2/img3 predeterminadas + las importadas que se hayan guardado
+
+  // Si había datos de turno guardados, repinta las etiquetas de "Datos de turno"
+  ["T1","T2","T3"].forEach(t=>{
+    if(state[t].vals&&state[t].vals.length)renderTags(t,state[t].vals);
+  });
+
+  const link=document.getElementById("open-excel-link");
+  if(link&&EXCEL_URL)link.href=EXCEL_URL;
+
+  BASEMAP.onload=()=>redrawMainMap();
+  BUQUE_IMG.onload=redrawMainMap;
+  if(BASEMAP.complete&&BASEMAP.naturalWidth>0)redrawMainMap();
+});
+window.addEventListener("beforeunload",()=>{clearTimeout(saveTimer);saveState();});
+window.addEventListener("resize",()=>{
+  redrawMainMap();
+  if(document.getElementById("modal").classList.contains("open"))redrawModal();
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){closeModal();closeCtxMenu();cancelTextDialog();closeExcelModal();document.getElementById('download-menu')?.classList.remove('open');}
+});
+new ResizeObserver(()=>redrawMainMap()).observe(document.getElementById("map-container"));
+</script>
+</body>
+</html>
