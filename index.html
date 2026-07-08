@@ -314,6 +314,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   <div class="logo">Plano Faenas Portuarias · ITI</div>
   <div style="display:flex;align-items:center;gap:8px">
     <span id="conn-status" class="conn-status">🟡 Conectando…</span>
+    <span id="sync-status" class="conn-status" style="color:#8894b8;font-weight:400"></span>
     <button id="upload-now-btn" class="upload-now-btn" onclick="forceUploadNow()" title="Fuerza subir los cambios a la nube ahora mismo">
       ⬆ Subir cambios
     </button>
@@ -1232,7 +1233,9 @@ function redrawMainMap(){
 const STORAGE_KEY="plano_faenas_iti_v1";
 let saveTimer=null;
 let dbRef=null;
-let suppressSave=false; // true mientras aplicamos datos recibidos de Firebase, para no reenviarlos en loop
+let suppressSave=true; // arranca BLOQUEADO: no guardar nada hasta que Firebase confirme los datos reales
+                        // (si no, el redraw inicial —con el mapa todavía vacío— podría subir ese vacío
+                        // a Firebase antes de que llegue la respuesta real, pisando lo guardado)
 
 function scheduleSave(){
   if(suppressSave)return; // evita el loop: dato llega de Firebase → se aplica → no debe volver a guardarse
@@ -1243,6 +1246,7 @@ function scheduleSave(){
 function buildSaveData(){
   return{
     version:1,
+    updatedAt:Date.now(), // sello de tiempo real: nos permite verificar si un dispositivo trajo el dato más nuevo
     fecha:document.getElementById("fecha")?.value||"",
     state, // T1/T2/T3: vals, flujos, colores, posiciones de zonas/naves
     userElements, // textos, riesgos e imágenes colocados en el mapa
@@ -1250,6 +1254,14 @@ function buildSaveData(){
     // Solo se guardan las imágenes IMPORTADAS por el usuario (las 3 predeterminadas ya están en el código)
     customImages:imageDefs.filter(d=>d.custom).map(d=>({id:d.id,src:d.src,label:d.label})),
   };
+}
+
+function showSyncStamp(prefix,ts){
+  const el=document.getElementById("sync-status");
+  if(!el)return;
+  const d=ts?new Date(ts):new Date();
+  const hh=String(d.getHours()).padStart(2,"0"),mm=String(d.getMinutes()).padStart(2,"0"),ss=String(d.getSeconds()).padStart(2,"0");
+  el.textContent=`${prefix} ${hh}:${mm}:${ss}`;
 }
 
 function saveState(){
@@ -1261,24 +1273,57 @@ function saveState(){
   }
   if(dbRef){
     dbRef.set(data)
-      .then(()=>console.log("[Firebase] Guardado automático OK —",new Date().toLocaleTimeString()))
+      .then(()=>{
+        console.log("[Firebase] Guardado automático OK —",new Date().toLocaleTimeString());
+        showSyncStamp("↑ Subido",data.updatedAt);
+      })
       .catch(e=>console.warn("No se pudo sincronizar con Firebase:",e));
   }
 }
 
-// Carga inicial desde localStorage (instantánea, mientras Firebase termina de conectar)
+// Carga inicial desde localStorage (instantánea, mientras Firebase termina de conectar).
+// IMPORTANTE: esto aplica los datos pero NO destraba el guardado (suppressSave sigue en true).
+// El candado solo lo abre Firebase cuando confirma cuál es la versión real (ver applyLoadedData).
 function loadState(){
   let raw;
   try{ raw=localStorage.getItem(STORAGE_KEY); }catch(e){ return; }
   if(!raw)return;
   let data;
   try{ data=JSON.parse(raw); }catch(e){ return; }
-  applyLoadedData(data,false);
+  applyDataQuiet(data);
 }
 
-// Aplica un objeto de datos (venga de localStorage o de Firebase) al estado en memoria y refresca la UI.
-// fullRerender=true cuando llega en caliente desde Firebase (mientras la página ya está en uso),
-// para reconstruir también los paneles (turnos, flujo, imágenes) y no solo redibujar el mapa.
+// Aplica datos al estado en memoria sin tocar el candado de guardado (suppressSave).
+// Se usa para la carga inicial desde localStorage, antes de saber si Firebase tiene otra versión.
+function applyDataQuiet(data){
+  if(!data)return;
+  if(data.fecha)document.getElementById("fecha").value=data.fecha;
+  if(data.state){
+    ["T1","T2","T3"].forEach(t=>{
+      if(data.state[t])Object.assign(state[t],data.state[t]);
+    });
+  }
+  if(Array.isArray(data.userElements)){
+    userElements.length=0;
+    data.userElements.forEach(el=>userElements.push(el));
+  }
+  if(typeof data.nextElId==="number")nextElId=Math.max(nextElId,data.nextElId);
+  if(Array.isArray(data.customImages)){
+    imageDefs=imageDefs.filter(d=>!d.custom);
+    data.customImages.forEach(d=>{
+      const img=new Image();
+      img.onload=()=>redrawMainMap();
+      img.src=d.src;
+      imageDefs.push({id:d.id,src:d.src,img,label:d.label,custom:true});
+    });
+  }
+  normalizeFlujoState();
+}
+
+// Aplica un objeto de datos que viene de FIREBASE (la fuente de verdad) al estado en memoria y refresca la UI.
+// fullRerender=true cuando llega en caliente (mientras la página ya está en uso), para reconstruir
+// también los paneles (turnos, flujo, imágenes) y no solo redibujar el mapa.
+// Al terminar, DESTRABA suppressSave: recién ahí es seguro permitir que los cambios del usuario se guarden.
 function applyLoadedData(data,fullRerender){
   if(!data)return;
   suppressSave=true;
@@ -1314,6 +1359,7 @@ function applyLoadedData(data,fullRerender){
       populateImageGrid();
       ["T1","T2","T3"].forEach(t=>renderTags(t,state[t].vals||[]));
       redrawMainMap();
+      showSyncStamp("↓ Recibido",data.updatedAt);
     }
   } finally {
     suppressSave=false;
@@ -1376,7 +1422,18 @@ function forceUploadNow(){
   if(btn){btn.disabled=true;btn.textContent="⬆ Subiendo...";}
   dbRef.set(data).then(()=>{
     console.log("[Firebase] Subida manual OK —",new Date().toLocaleTimeString());
+    showSyncStamp("↑ Subido",data.updatedAt);
     if(btn){btn.textContent="✓ Subido";}
+    // Verificación extra: releemos directo desde Firebase para confirmar que el dato quedó ahí de verdad
+    dbRef.once("value").then(snap=>{
+      const back=snap.val();
+      if(back&&back.updatedAt===data.updatedAt){
+        console.log("[Firebase] Verificado: el servidor tiene el dato recién subido.");
+      } else {
+        console.warn("[Firebase] ⚠ Al releer, el servidor NO tiene el updatedAt recién subido. Valor en servidor:",back&&back.updatedAt);
+        alert("Atención: los cambios se enviaron, pero al volver a leer desde Firebase no coinciden. Puede haber otro dispositivo escribiendo al mismo tiempo, o un problema de sincronización. Revisá la consola (F12) para más detalle.");
+      }
+    }).catch(e=>console.warn("No se pudo releer para verificar:",e));
     setTimeout(()=>{ if(btn){btn.disabled=false;btn.textContent="⬆ Subir cambios";} },1500);
   }).catch(e=>{
     console.error("[Firebase] Error al subir manualmente:",e);
@@ -1782,6 +1839,15 @@ window.addEventListener("load",()=>{
   if(BASEMAP.complete&&BASEMAP.naturalWidth>0)redrawMainMap();
 
   initFirebaseSync(); // conecta y sincroniza en tiempo real con Firebase (si está disponible)
+
+  // Red de seguridad: si Firebase no contesta en unos segundos (sin internet, bloqueado, etc.),
+  // destraba el guardado igual para no dejar los cambios del usuario sin guardar para siempre.
+  setTimeout(()=>{
+    if(suppressSave){
+      console.warn("Firebase no respondió a tiempo; se habilita el guardado local de todos modos.");
+      suppressSave=false;
+    }
+  },4000);
 });
 window.addEventListener("beforeunload",()=>{clearTimeout(saveTimer);saveState();});
 window.addEventListener("resize",()=>{
