@@ -93,7 +93,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .dc-head{display:flex;align-items:center;justify-content:space-between;padding:3px 7px;font-size:16px;font-weight:700}
 .dc-t1 .dc-head{background:#0f2040;color:#7eb8f7;border-bottom:1px solid #1e4aaa}
 .dc-t2 .dc-head{background:#0a2018;color:#86efac;border-bottom:1px solid #1a5c30}
-.dc-t3 .dc-head{background:#200a0a;color:#fca5a5;border-bottom:1px solid #8a1a1a}
+.dc-t3 .dc-head{background:#062a26;color:#5eead4;border-bottom:1px solid #0d9488}
 .dc-tags{padding:4px 6px;display:flex;flex-wrap:wrap;gap:3px;min-height:20px}
 .ptag{font-size:11px;padding:2px 5px;border-radius:3px;font-weight:600;color:#fff;
       cursor:pointer;user-select:none;transition:filter .15s}
@@ -101,17 +101,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .ptag[data-fixed]{cursor:default}.ptag[data-fixed]:hover{filter:none}
 .dc-empty{font-size:15px;color:var(--muted2);font-style:italic}
 
-.traffic-panel{border-color:#5a1a1a}
-.traffic-panel .panel-head{background:linear-gradient(135deg,#3a0a0a,#1a0505);color:#fca5a5;border-bottom-color:#5a1a1a}
+.traffic-panel{border-color:#13364d}
+.traffic-panel .panel-head{background:linear-gradient(135deg,#0a2a3a,#061822);color:#7eb8f7;border-bottom-color:#1a4a6a}
 .traffic-body{padding:7px 8px;overflow-y:auto;flex:1}
 .traffic-body::-webkit-scrollbar{width:3px}
 .flujo-tbl{width:100%;border-collapse:collapse}
 .flujo-tbl th{font-size:16px;color:#ffffff;font-weight:600;text-align:center;padding:3px 1px;border-bottom:1px solid var(--border)}
 .flujo-tbl th.th-loc{color:#ffffff}
 .flujo-tbl td{padding:4px 2px;text-align:center;vertical-align:middle}
-.tr-t1{background:rgba(37,99,235,.06)}.tr-t2{background:rgba(22,163,74,.06)}.tr-t3{background:rgba(220,38,38,.06)}
+.tr-t1{background:rgba(37,99,235,.06)}.tr-t2{background:rgba(22,163,74,.06)}.tr-t3{background:rgba(20,184,166,.06)}
 .tr-lbl{font-size:15px;font-weight:700;text-align:left!important;padding-left:4px!important;white-space:nowrap}
-.tr-t1 .tr-lbl{color:#7eb8f7}.tr-t2 .tr-lbl{color:#86efac}.tr-t3 .tr-lbl{color:#fca5a5}
+.tr-t1 .tr-lbl{color:#7eb8f7}.tr-t2 .tr-lbl{color:#86efac}.tr-t3 .tr-lbl{color:#5eead4}
 .fbtn-g{display:flex;gap:4px;justify-content:center}
 .fbtn-g-multi{display:flex;flex-direction:column;gap:3px;align-items:center}
 .flow-line-row{display:flex;gap:3px;align-items:center}
@@ -143,7 +143,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .map-tab:hover{color:var(--text);background:var(--surface)}
 .map-tab.act-t1{color:#7eb8f7;border-bottom-color:var(--t1);background:rgba(37,99,235,.07)}
 .map-tab.act-t2{color:#86efac;border-bottom-color:var(--t2);background:rgba(22,163,74,.07)}
-.map-tab.act-t3{color:#fca5a5;border-bottom-color:var(--t3);background:rgba(220,38,38,.07)}
+.map-tab.act-t3{color:#5eead4;border-bottom-color:var(--t3);background:rgba(20,184,166,.07)}
 .tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .tdot-1{background:var(--t1)}.tdot-2{background:var(--t2)}.tdot-3{background:var(--t3)}
 .tab-hrs{font-size:15px;font-weight:400;opacity:.7}
@@ -272,10 +272,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 
   /* Orden en el celular: primero el mapa (lo más importante), después turnos, flujo y leyenda */
   .excel-panel{order:1;width:100%;height:52px}
-  .maps-panel{order:2;height:68vh;min-height:420px}
-  .paste-panel{order:3;flex:none;max-height:none}
+  .maps-panel{order:2;height:60vh;min-height:380px}
+  .legend-panel{order:3;height:auto;max-height:none}
   .traffic-panel{order:4;flex:none}
-  .legend-panel{order:5;height:auto;max-height:none}
+  .paste-panel{order:5;flex:none;max-height:none}
 
   .legend-body{flex-direction:row;flex-wrap:wrap;gap:10px 18px;padding:12px}
   .leg-sub,.leg-sep{width:100%}
@@ -388,7 +388,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
           <div class="dc-tags" id="tags-T2"><span class="dc-empty">Sin datos</span></div>
         </div>
         <div class="dc dc-t3">
-          <div class="dc-head"><span>🔴 Mañana 1er Turno</span><span style="font-weight:400;font-size:11px">08:00–15:30</span></div>
+          <div class="dc-head"><span>🔷 Mañana 1er Turno</span><span style="font-weight:400;font-size:11px">08:00–15:30</span></div>
           <div class="dc-tags" id="tags-T3"><span class="dc-empty">Sin datos</span></div>
         </div>
       </div>
@@ -771,6 +771,11 @@ function initCanvasEvents(){
     }
     lastClickMapPos=null;
     clickedHit=null;
+    if(wasDragging){
+      // Al soltar después de arrastrar, guarda ya mismo (no espera el debounce de 300ms)
+      clearTimeout(saveTimer);
+      saveState();
+    }
   });
 
   cv.addEventListener('mouseleave',()=>{
@@ -1221,7 +1226,7 @@ let suppressSave=false; // true mientras aplicamos datos recibidos de Firebase, 
 function scheduleSave(){
   if(suppressSave)return; // evita el loop: dato llega de Firebase → se aplica → no debe volver a guardarse
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(saveState,300);
+  saveTimer=setTimeout(saveState,150);
 }
 
 function buildSaveData(){
