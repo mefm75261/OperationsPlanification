@@ -23,6 +23,11 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
         padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px}
 .logo{font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#739fbf;white-space:nowrap}
 .fecha-wrap{display:flex;align-items:center;gap:7px}
+.conn-status{font-size:12px;font-weight:700;white-space:nowrap}
+.upload-now-btn{background:#0d2a5a;border:1px solid #2563eb;color:#7eb8f7;padding:4px 10px;
+                 border-radius:5px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:700}
+.upload-now-btn:hover{background:#123a7a}
+.upload-now-btn:disabled{opacity:.6;cursor:default}
 .fecha-wrap label{font-size:14px;color:var(--muted)}
 .fecha-wrap input{background:var(--surface);border:1px solid var(--border);color:var(--text);
                   padding:3px 8px;border-radius:5px;font-size:14px}
@@ -255,6 +260,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   body{overflow-y:auto;overflow-x:hidden;padding:6px;gap:6px}
 
   .header{flex-wrap:wrap;gap:6px;padding:6px 8px}
+  .conn-status{font-size:10px}
+  .upload-now-btn{font-size:10px;padding:3px 7px}
   .logo{font-size:13px}
   .fecha-wrap label{font-size:12px}
   .fecha-wrap input{font-size:12px;padding:2px 6px}
@@ -306,6 +313,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 <div class="header">
   <div class="logo">Plano Faenas Portuarias · ITI</div>
   <div style="display:flex;align-items:center;gap:8px">
+    <span id="conn-status" class="conn-status">🟡 Conectando…</span>
+    <button id="upload-now-btn" class="upload-now-btn" onclick="forceUploadNow()" title="Fuerza subir los cambios a la nube ahora mismo">
+      ⬆ Subir cambios
+    </button>
     <div class="fecha-wrap">
       <label>Fecha</label>
       <input type="date" id="fecha" onchange="redrawMainMap()">
@@ -1249,7 +1260,9 @@ function saveState(){
     console.warn("No se pudo guardar en este navegador (posiblemente localStorage lleno o deshabilitado):",e);
   }
   if(dbRef){
-    dbRef.set(data).catch(e=>console.warn("No se pudo sincronizar con Firebase:",e));
+    dbRef.set(data)
+      .then(()=>console.log("[Firebase] Guardado automático OK —",new Date().toLocaleTimeString()))
+      .catch(e=>console.warn("No se pudo sincronizar con Firebase:",e));
   }
 }
 
@@ -1312,6 +1325,7 @@ function initFirebaseSync(){
   try{
     if(typeof firebase==="undefined"){
       console.warn("El SDK de Firebase no cargó; se seguirá funcionando solo con guardado local (localStorage).");
+      setConnStatus("error","🔴 Sin nube (SDK no cargó)");
       return;
     }
     firebase.initializeApp(firebaseConfig);
@@ -1320,9 +1334,60 @@ function initFirebaseSync(){
       const data=snapshot.val();
       if(data)applyLoadedData(data,true);
     });
+
+    // Indicador REAL de conexión al servidor (no solo si dbRef existe, sino si el socket está conectado)
+    firebase.database().ref(".info/connected").on("value",snap=>{
+      if(snap.val()===true) setConnStatus("ok","🟢 En línea");
+      else setConnStatus("warn","🟡 Reconectando…");
+    });
   }catch(e){
     console.warn("No se pudo conectar a Firebase; se seguirá funcionando solo con guardado local (localStorage):",e);
+    setConnStatus("error","🔴 Sin nube (error al conectar)");
   }
+}
+
+function setConnStatus(kind,text){
+  const el=document.getElementById("conn-status");
+  if(!el)return;
+  el.textContent=text;
+  el.style.color=kind==="ok"?"#86efac":kind==="warn"?"#f0c060":"#fca5a5";
+}
+
+// Botón "⬆ Subir cambios": fuerza el guardado YA MISMO (sin esperar el debounce) y avisa
+// con claridad si algo falla, en vez de solo dejar un warning silencioso en la consola.
+function forceUploadNow(){
+  clearTimeout(saveTimer);
+  const btn=document.getElementById("upload-now-btn");
+  const data=buildSaveData();
+
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(data)); }
+  catch(e){ console.warn("No se pudo guardar en este navegador:",e); }
+
+  if(!dbRef){
+    alert(
+      "No hay conexión con la base de datos compartida (Firebase).\n\n"+
+      "Los cambios quedaron guardados SOLO en este navegador, no se subieron a la nube.\n\n"+
+      "Revisá tu conexión a internet. Si el problema sigue, puede ser que las Reglas de "+
+      "Firebase (Realtime Database → Reglas) ya no estén en modo abierto."
+    );
+    return;
+  }
+
+  if(btn){btn.disabled=true;btn.textContent="⬆ Subiendo...";}
+  dbRef.set(data).then(()=>{
+    console.log("[Firebase] Subida manual OK —",new Date().toLocaleTimeString());
+    if(btn){btn.textContent="✓ Subido";}
+    setTimeout(()=>{ if(btn){btn.disabled=false;btn.textContent="⬆ Subir cambios";} },1500);
+  }).catch(e=>{
+    console.error("[Firebase] Error al subir manualmente:",e);
+    alert(
+      "No se pudieron subir los cambios a la nube.\n\n"+
+      "Error: "+(e&&e.message?e.message:e)+"\n\n"+
+      "Esto casi siempre pasa porque las Reglas de Firebase (Realtime Database → Reglas) "+
+      "no están en modo abierto, o expiró el \"modo de prueba\" de 30 días."
+    );
+    if(btn){btn.disabled=false;btn.textContent="⬆ Subir cambios";}
+  });
 }
 
 function showMapTab(t){
