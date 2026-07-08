@@ -1451,7 +1451,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ta.addEventListener("paste",function(e){
     e.preventDefault();
     const cd=e.clipboardData||window.clipboardData;if(!cd)return;
-    let text=(cd.getData("text/plain")||"").trim();
+    let text=(cd.getData("text/plain")||"").replace(/^[\r\n]+|[\r\n]+$/g,"");
     if(!text||!text.includes("\t")){const h=cd.getData("text/html")||"";if(h)text=htmlTableToTSV(h)||text;}
     if(text){
       const s=ta.selectionStart,en=ta.selectionEnd;
