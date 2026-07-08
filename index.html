@@ -306,6 +306,35 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   .ctx-risks-grid{grid-template-columns:repeat(3,1fr)}
   .paste-lbl{flex-wrap:wrap;gap:4px}
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODO ESPECTADOR (link de solo lectura para un turno puntual)
+   Se activa solo, agregando ?turno=1, ?turno=2 o ?turno=3 al final del
+   link. Muestra únicamente el mapa + la leyenda (el título del día y
+   turno ya está dibujado dentro del mapa). Todo lo demás se oculta.
+   ═══════════════════════════════════════════════════════════════════ */
+body.viewer-mode .excel-panel,
+body.viewer-mode .sidebar-col,
+body.viewer-mode .map-tabs,
+body.viewer-mode .drag-hint,
+body.viewer-mode .map-footer,
+body.viewer-mode #conn-status,
+body.viewer-mode #upload-now-btn,
+body.viewer-mode .fecha-wrap{display:none!important}
+
+body.viewer-mode .main-grid{
+  grid-template-rows:1fr;
+  grid-template-columns:1fr 200px;
+  grid-template-areas:"maps legend";
+}
+/* Solo lectura: sin arrastrar, sin agregar elementos, sin cambiar tamaños */
+body.viewer-mode .map-canvas{cursor:default;pointer-events:none}
+
+@media (max-width:860px){
+  body.viewer-mode .main-grid{display:flex;flex-direction:column;height:auto}
+  body.viewer-mode .maps-panel{order:1;height:70vh;min-height:380px}
+  body.viewer-mode .legend-panel{order:2;height:auto;max-height:none}
+}
 </style>
 </head>
 <body>
@@ -435,6 +464,14 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
                   onclick="clearTodo()" title="Borra TODO: imágenes/textos agregados + etiquetas de los 3 turnos + cuadro de pegar">
             🗑 Borrar todo
           </button>
+          <div style="position:relative">
+            <button class="expand-btn" onclick="toggleLinksMenu(event)" title="Genera un link de solo lectura (mapa + leyenda) para un turno puntual">🔗 Links</button>
+            <div id="links-menu" class="download-menu">
+              <button onclick="copyTurnoLink('1')">📋 Link 1er Turno</button>
+              <button onclick="copyTurnoLink('2')">📋 Link 2do Turno</button>
+              <button onclick="copyTurnoLink('3')">📋 Link 3er Turno</button>
+            </div>
+          </div>
           <div style="position:relative">
             <button class="expand-btn" onclick="toggleDownloadMenu(event)">⬇ Descargar</button>
             <div id="download-menu" class="download-menu">
@@ -1522,7 +1559,37 @@ function toggleDownloadMenu(e){
 }
 document.addEventListener('click',()=>{
   document.getElementById('download-menu')?.classList.remove('open');
+  document.getElementById('links-menu')?.classList.remove('open');
 });
+
+// ─── MODO ESPECTADOR: link de solo lectura por turno (?turno=1|2|3) ───────
+// 1er Turno = internamente T3, 2do Turno = internamente T1, 3er Turno = internamente T2
+const TURNO_QUERY_MAP={"1":"T3","2":"T1","3":"T2"};
+
+function initViewerModeFromURL(){
+  const q=new URLSearchParams(window.location.search).get("turno");
+  if(q&&TURNO_QUERY_MAP[q]){
+    document.body.classList.add("viewer-mode");
+    activeMap=TURNO_QUERY_MAP[q];
+  }
+}
+
+function toggleLinksMenu(e){
+  e.stopPropagation();
+  document.getElementById('links-menu').classList.toggle('open');
+}
+
+function copyTurnoLink(q){
+  document.getElementById('links-menu').classList.remove('open');
+  const url=`${location.origin}${location.pathname}?turno=${q}`;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url)
+      .then(()=>alert("✓ Link copiado al portapapeles:\n\n"+url))
+      .catch(()=>prompt("Copiá este link:",url));
+  } else {
+    prompt("Copiá este link:",url);
+  }
+}
 
 // Dibuja un turno completo (mapa + elementos + leyenda) en un canvas nuevo, en alta resolución.
 function renderTurnoToCanvas(t,scale=2){
@@ -1818,6 +1885,7 @@ function getFechaForTurno(t){
 
 // ─── INIT ─────────────────────────────────────────────────────
 window.addEventListener("load",()=>{
+  initViewerModeFromURL(); // si el link trae ?turno=1|2|3, activa el modo solo-mapa+leyenda
   document.getElementById("fecha").value=new Date().toISOString().split("T")[0];
   loadState(); // recupera lo guardado en este navegador (si existe), puede pisar la fecha de arriba
   normalizeFlujoState(); // asegura que los flujos queden en el formato nuevo (array de líneas)
