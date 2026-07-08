@@ -160,7 +160,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
             border-radius:4px;font-size:14px;cursor:pointer;transition:all .15s}
 .expand-btn:hover{background:var(--border);color:var(--text)}
 .download-menu{display:none;position:absolute;bottom:130%;right:0;background:#1a2035;border:1px solid #263050;
-               border-radius:8px;padding:5px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60}
+               border-radius:8px;padding:5px;width:280px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60}
 .download-menu.open{display:flex;flex-direction:column;gap:3px}
 .download-menu button{background:none;border:none;color:#dde2ef;text-align:left;padding:7px 9px;
                        border-radius:5px;font-size:14px;cursor:pointer;white-space:nowrap}
@@ -467,9 +467,9 @@ body.viewer-mode .map-canvas{cursor:default;pointer-events:none}
           <div style="position:relative">
             <button class="expand-btn" onclick="toggleLinksMenu(event)" title="Genera un link de solo lectura (mapa + leyenda) para un turno puntual">🔗 Links</button>
             <div id="links-menu" class="download-menu">
-              <button onclick="copyTurnoLink('1')">📋 Link 1er Turno</button>
-              <button onclick="copyTurnoLink('2')">📋 Link 2do Turno</button>
-              <button onclick="copyTurnoLink('3')">📋 Link 3er Turno</button>
+              <button onclick="copyTurnoLink('2')">📋 Link 2do Turno [Hoy]</button>
+              <button onclick="copyTurnoLink('3')">📋 Link 3er Turno [Hoy]</button>
+              <button onclick="copyTurnoLink('1')">📋 Link 1er Turno [Mañana]</button>
             </div>
           </div>
           <div style="position:relative">
