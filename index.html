@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plano Faenas Portuarias – ITI</title>
+<!-- Se ejecuta ANTES de pintar nada: si el link trae ?turno=1|2|3, marca <html> como modo vista
+     de una, para que el CSS ya oculte los paneles de edición desde el primer frame (sin destello). -->
+<script>
+(function(){
+  var q=new URLSearchParams(location.search).get("turno");
+  if(q==="1"||q==="2"||q==="3") document.documentElement.classList.add("viewer-mode");
+})();
+</script>
 <!-- Ícono de la pestaña (favicon). Es el emoji ⚓ generado como SVG, no necesita ningún archivo extra.
      Si más adelante querés tu propio logo, reemplazá esta línea por, por ejemplo:
      <link rel="icon" type="image/png" href="favicon.png">  (subiendo favicon.png junto al resto de las imágenes) -->
@@ -310,34 +318,76 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 /* ═══════════════════════════════════════════════════════════════════
    MODO ESPECTADOR (link de solo lectura para un turno puntual)
    Se activa solo, agregando ?turno=1, ?turno=2 o ?turno=3 al final del
-   link. Muestra únicamente el mapa + la leyenda (el título del día y
-   turno ya está dibujado dentro del mapa). Todo lo demás se oculta.
+   link. El selector es ".viewer-mode ..." (no "body.viewer-mode ...")
+   porque la clase se pone en <html> lo antes posible, antes de pintar,
+   para que no haya destello del panel principal.
+   Muestra únicamente el mapa a pantalla completa, con la leyenda ya
+   integrada DENTRO del dibujo del mapa (misma que se usa en "Expandir"
+   y en las descargas) — nada de paneles ni recuadros aparte.
    ═══════════════════════════════════════════════════════════════════ */
-body.viewer-mode .excel-panel,
-body.viewer-mode .sidebar-col,
-body.viewer-mode .map-tabs,
-body.viewer-mode .drag-hint,
-body.viewer-mode .map-footer,
-body.viewer-mode #conn-status,
-body.viewer-mode #upload-now-btn,
-body.viewer-mode .fecha-wrap{display:none!important}
+.viewer-mode .header,
+.viewer-mode .excel-panel,
+.viewer-mode .sidebar-col,
+.viewer-mode .legend-panel,
+.viewer-mode .map-tabs,
+.viewer-mode .drag-hint,
+.viewer-mode .map-footer{display:none!important}
 
-body.viewer-mode .main-grid{
+.viewer-mode body{padding:0;gap:0}
+.viewer-mode .main-grid{
   grid-template-rows:1fr;
-  grid-template-columns:1fr 200px;
-  grid-template-areas:"maps legend";
+  grid-template-columns:1fr;
+  grid-template-areas:"maps";
+  gap:0;
 }
+.viewer-mode .maps-panel{border:none;border-radius:0}
+.viewer-mode .map-container{background:#060d12}
 /* Solo lectura: sin arrastrar, sin agregar elementos, sin cambiar tamaños */
-body.viewer-mode .map-canvas{cursor:default;pointer-events:none}
+.viewer-mode .map-canvas{cursor:default;pointer-events:none}
+
+/* ─── Detalles "pantalla de control": HUD con vivo + reloj, y scanline sutil ─── */
+.viewer-scanline{display:none;position:fixed;top:0;left:0;right:0;height:2px;z-index:299;
+  background:linear-gradient(90deg,transparent,rgba(94,234,212,.85),transparent);
+  background-size:60% 100%;background-repeat:no-repeat;
+  animation:viewerScan 4.5s linear infinite}
+.viewer-mode .viewer-scanline{display:block}
+@keyframes viewerScan{
+  0%{background-position:-60% 0}
+  100%{background-position:160% 0}
+}
+
+.viewer-hud{display:none;position:fixed;top:16px;right:18px;z-index:300;
+  align-items:center;gap:9px;padding:7px 16px;border-radius:22px;
+  background:rgba(6,14,20,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(94,234,212,.35);
+  color:#5eead4;font-size:13px;font-weight:700;letter-spacing:.6px;
+  box-shadow:0 0 22px rgba(94,234,212,.22),inset 0 0 10px rgba(94,234,212,.06)}
+.viewer-mode .viewer-hud{display:flex}
+.viewer-hud .live-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;flex-shrink:0;
+  box-shadow:0 0 9px #4ade80;animation:viewerLivePulse 1.7s ease-in-out infinite}
+.viewer-hud .hud-sep{opacity:.35}
+.viewer-hud #hud-clock{font-variant-numeric:tabular-nums;color:#dff7f0}
+@keyframes viewerLivePulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.35;transform:scale(.65)}
+}
 
 @media (max-width:860px){
-  body.viewer-mode .main-grid{display:flex;flex-direction:column;height:auto}
-  body.viewer-mode .maps-panel{order:1;height:70vh;min-height:380px}
-  body.viewer-mode .legend-panel{order:2;height:auto;max-height:none}
+  .viewer-mode .main-grid{display:flex;flex-direction:column;height:100vh}
+  .viewer-mode .maps-panel{height:100%}
+  .viewer-hud{top:10px;right:10px;font-size:11px;padding:5px 11px}
 }
 </style>
 </head>
 <body>
+<div class="viewer-scanline"></div>
+<div class="viewer-hud" id="viewer-hud">
+  <span class="live-dot"></span>
+  <span>EN VIVO</span>
+  <span class="hud-sep">·</span>
+  <span id="hud-clock">--:--:--</span>
+</div>
+
 
 <div class="header">
   <div class="logo">Plano Faenas Portuarias · ITI</div>
@@ -1226,14 +1276,24 @@ function drawNave(ctx,val,pos,px,py,siteLabel,isMN,siteColIdx,off){
   ctx.fillText(siteLabel,x+px(4),y+bh/2);ctx.restore();
 }
 
+let dashAnimT=0; // segundos, avanza solo en modo vista (ver animateViewerFlow)
+
 function drawFlujo(ctx,dir,x0,x1,cy,px,py,color){
   const ah=px(9);
   const arrowAtStart=(dir==="rtl"||dir==="both"); // punta en x0 (izquierda)
   const arrowAtEnd=(dir==="ltr"||dir==="both");   // punta en x1 (derecha)
+  const dashLen=px(10),gapLen=px(6);
   ctx.save();
   ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=px(2.2);
   ctx.globalAlpha=.82;ctx.shadowColor=color;ctx.shadowBlur=px(4);
-  ctx.setLineDash([px(10),px(6)]);
+  ctx.setLineDash([dashLen,gapLen]);
+  if(isViewerMode()){
+    // Guiones "viajando" en el sentido del flujo — solo se anima en el modo vista (pantallas)
+    const cycle=dashLen+gapLen, speed=cycle*0.9; // px/seg
+    let off=(dashAnimT*speed)%cycle;
+    if(arrowAtStart&&!arrowAtEnd) off=-off; // rtl: viaja hacia la izquierda
+    ctx.lineDashOffset=off;
+  }
   const lx0=arrowAtStart?x0+ah*0.8:x0;
   const lx1=arrowAtEnd?x1-ah*0.8:x1;
   ctx.beginPath();ctx.moveTo(lx0,cy);ctx.lineTo(lx1,cy);ctx.stroke();
@@ -1250,7 +1310,7 @@ function drawFlujo(ctx,dir,x0,x1,cy,px,py,color){
 }
 
 // ─── MAP RENDERING ────────────────────────────────────────────
-function redrawMainMap(){
+function redrawMainMap(skipSave){
   const cv=document.getElementById("main-cv");
   const ctnr=document.getElementById("map-container");
   const W=ctnr.clientWidth,H=ctnr.clientHeight;
@@ -1261,9 +1321,11 @@ function redrawMainMap(){
   const r=getMapRect(W,H);
   if(BASEMAP.complete&&BASEMAP.naturalWidth>0)ctx.drawImage(BASEMAP,r.x,r.y,r.w,r.h);
   else{ctx.fillStyle="#d4d0c8";ctx.fillRect(r.x,r.y,r.w,r.h);}
-  ctx.save();ctx.translate(r.x,r.y);drawOnCtx(ctx,activeMap,r.w,r.h);ctx.restore();
+  ctx.save();ctx.translate(r.x,r.y);drawOnCtx(ctx,activeMap,r.w,r.h);
+  if(isViewerMode())drawInlineMapLegend(ctx,r.w,r.h); // leyenda integrada en el mapa (sin panel aparte)
+  ctx.restore();
   updateFooter();
-  scheduleSave(); // guarda automáticamente (localStorage + Firebase), sin recargar la página
+  if(!skipSave)scheduleSave(); // guarda automáticamente (localStorage + Firebase), sin recargar la página
 }
 
 // ─── GUARDADO / CARGA: localStorage (instantáneo, por navegador) + Firebase (compartido, en tiempo real) ──
@@ -1566,12 +1628,47 @@ document.addEventListener('click',()=>{
 // 1er Turno = internamente T3, 2do Turno = internamente T1, 3er Turno = internamente T2
 const TURNO_QUERY_MAP={"1":"T3","2":"T1","3":"T2"};
 
+// La clase "viewer-mode" ya se puso en <html> lo antes posible (script en el <head>,
+// antes de pintar), así que acá solo hace falta fijar el turno y arrancar los detalles
+// dinámicos (animación de flujo, reloj del HUD).
+function isViewerMode(){
+  return document.documentElement.classList.contains("viewer-mode");
+}
+
 function initViewerModeFromURL(){
   const q=new URLSearchParams(window.location.search).get("turno");
   if(q&&TURNO_QUERY_MAP[q]){
-    document.body.classList.add("viewer-mode");
+    document.documentElement.classList.add("viewer-mode"); // por si el script del <head> no llegó a correr
     activeMap=TURNO_QUERY_MAP[q];
+    startViewerFlowAnimation();
+    startHudClock();
   }
+}
+
+// Anima el patrón de guiones de las líneas de tránsito (efecto "flujo" real, solo en modo vista).
+// No usa el guardado (redrawMainMap(true)) para no disparar cientos de guardados por segundo.
+let viewerAnimRunning=false;
+function startViewerFlowAnimation(){
+  if(viewerAnimRunning)return;
+  viewerAnimRunning=true;
+  function step(ts){
+    if(!isViewerMode()){viewerAnimRunning=false;return;}
+    dashAnimT=ts/1000;
+    redrawMainMap(true);
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Reloj del HUD ("EN VIVO · HH:MM:SS")
+function startHudClock(){
+  const el=document.getElementById("hud-clock");
+  if(!el)return;
+  function tick(){
+    el.textContent=new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  }
+  tick();
+  setInterval(tick,1000);
 }
 
 function toggleLinksMenu(e){
