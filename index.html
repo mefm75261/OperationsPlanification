@@ -22,6 +22,13 @@
   --bg:#162e25;--surface:#283d5c;--card:#151c26;--border:#739fbf;
   --text:#ffffff;--muted:#ffffff;--muted2:#ffffff;
   --t1:#f7f9ff;--t2:#f7f9ff;--t3:#f7f9ff;
+  /* Paleta única para TODOS los botones de acción de la app */
+  --btn-blue-bg:#123a63;--btn-blue-bg-hover:#1c4f82;
+  --btn-blue-border:#2f6fb5;--btn-blue-border-hover:#5a9bdb;
+  --btn-blue-text:#bfe0ff;
+  --btn-red-bg:#5a1620;--btn-red-bg-hover:#742030;
+  --btn-red-border:#a83a3a;--btn-red-border-hover:#e2605f;
+  --btn-red-text:#ffd6d6;
 }
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;
@@ -31,10 +38,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .logo{font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#739fbf;white-space:nowrap}
 .fecha-wrap{display:flex;align-items:center;gap:7px}
 .conn-status{font-size:12px;font-weight:700;white-space:nowrap}
-.upload-now-btn{background:#0d2a5a;border:1px solid #2563eb;color:#7eb8f7;padding:4px 10px;
-                 border-radius:5px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:700}
-.upload-now-btn:hover{background:#123a7a}
-.upload-now-btn:disabled{opacity:.6;cursor:default}
+.upload-now-btn{background:var(--btn-blue-bg);border:1px solid var(--btn-blue-border);color:var(--btn-blue-text);padding:5px 11px;
+                 border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:700;
+                 box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.upload-now-btn:hover{background:var(--btn-blue-bg-hover);border-color:var(--btn-blue-border-hover);color:#fff;
+                       transform:translateY(-2px);box-shadow:0 4px 10px rgba(47,111,181,.45)}
+.upload-now-btn:disabled{opacity:.6;cursor:default;transform:none;box-shadow:0 1px 2px rgba(0,0,0,.35)}
 .fecha-wrap label{font-size:14px;color:var(--muted)}
 .fecha-wrap input{background:var(--surface);border:1px solid var(--border);color:var(--text);
                   padding:3px 8px;border-radius:5px;font-size:14px}
@@ -63,12 +72,16 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .excel-panel{height:48px;align-self:start}
 .excel-panel .panel-head{background:linear-gradient(135deg,#1a2e50,#0a1828);border-bottom:none;height:100%}
 .excel-head-btns{display:flex;align-items:center;gap:6px;margin-left:auto}
-.excel-mini-link{font-size:12px;color:#7eb8f7;text-decoration:none;border:1px solid var(--border);
-           padding:3px 9px;border-radius:5px;background:var(--surface);white-space:nowrap}
-.excel-mini-link:hover{border-color:var(--t1)}
-.excel-mini-btn{background:#0d2a5a;border:1px solid #2563eb;color:#7eb8f7;
-                padding:3px 9px;border-radius:5px;font-size:12px;cursor:pointer;white-space:nowrap}
-.excel-mini-btn:hover{background:#123a7a}
+.excel-mini-link{font-size:12px;color:var(--btn-blue-text);text-decoration:none;border:1px solid var(--btn-blue-border);
+           padding:5px 11px;border-radius:6px;background:var(--btn-blue-bg);white-space:nowrap;font-weight:600;
+           box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.excel-mini-link:hover{background:var(--btn-blue-bg-hover);border-color:var(--btn-blue-border-hover);color:#fff;
+                        transform:translateY(-2px);box-shadow:0 4px 10px rgba(47,111,181,.45)}
+.excel-mini-btn{background:var(--btn-blue-bg);border:1px solid var(--btn-blue-border);color:var(--btn-blue-text);
+                padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:600;
+                box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.excel-mini-btn:hover{background:var(--btn-blue-bg-hover);border-color:var(--btn-blue-border-hover);color:#fff;
+                       transform:translateY(-2px);box-shadow:0 4px 10px rgba(47,111,181,.45)}
 .paste-panel{border-color:#13364d;overflow-y:auto}
 .paste-panel .panel-head{background:linear-gradient(135deg,#0a2a3a,#061822);color:#7eb8f7;border-bottom-color:#1a4a6a}
 .paste-panel::-webkit-scrollbar{width:3px}
@@ -77,13 +90,22 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .ctrl-section:last-child{border-bottom:none}
 .paste-lbl{font-size:16px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
 .paste-badge{background:var(--t1);color:#112d40;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
-.paste-badge-btn{background:#3a0a0a;color:#fca5a5;font-size:11px;font-weight:700;padding:3px 8px;
-                  border-radius:4px;border:1px solid #5a1a1a;cursor:pointer;white-space:nowrap}
-.paste-badge-btn:hover{background:#5a1a1a}
-.clear-etiquetas-btn{width:100%;margin-top:6px;background:#3a0a0a;color:#fca5a5;font-size:12px;
-                      font-weight:700;padding:6px 8px;border-radius:5px;border:1px solid #5a1a1a;cursor:pointer}
-.clear-etiquetas-btn:hover{background:#5a1a1a}
+.paste-badge-btn{background:var(--btn-red-bg);color:var(--btn-red-text);font-size:11px;font-weight:700;padding:4px 9px;
+                  border-radius:5px;border:1px solid var(--btn-red-border);cursor:pointer;white-space:nowrap;
+                  box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.paste-badge-btn:hover{background:var(--btn-red-bg-hover);border-color:var(--btn-red-border-hover);color:#fff;
+                        transform:translateY(-2px);box-shadow:0 4px 10px rgba(168,58,58,.45)}
+.clear-etiquetas-btn{width:100%;margin-top:6px;background:var(--btn-red-bg);color:var(--btn-red-text);font-size:12px;
+                      font-weight:700;padding:7px 8px;border-radius:6px;border:1px solid var(--btn-red-border);cursor:pointer;
+                      box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.clear-etiquetas-btn:hover{background:var(--btn-red-bg-hover);border-color:var(--btn-red-border-hover);color:#fff;
+                            transform:translateY(-2px);box-shadow:0 4px 10px rgba(168,58,58,.45)}
 /* Paste area mejorada */
+.mini-blue-btn{background:var(--btn-blue-bg);border:1px solid var(--btn-blue-border);color:var(--btn-blue-text);
+                padding:4px 9px;border-radius:5px;font-size:12px;cursor:pointer;
+                box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.mini-blue-btn:hover{background:var(--btn-blue-bg-hover);border-color:var(--btn-blue-border-hover);color:#fff;
+                      transform:translateY(-2px);box-shadow:0 4px 10px rgba(47,111,181,.45)}
 .paste-zone{position:relative}
 .paste-ta{width:100%;background:var(--bg);border:2px dashed var(--border);color:var(--text);
           padding:8px;border-radius:5px;font-family:monospace;height:62px;
@@ -152,9 +174,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .maps-panel{min-height:0;border-color:#1a4a2a}
 .map-tabs{flex:0 0 auto;display:flex;border-bottom:1px solid var(--border)}
 .map-tab{flex:1;padding:5px 3px;font-size:17px;font-weight:700;background:none;border:none;
-         border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;
+         border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;position:relative;
          display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s}
-.map-tab:hover{color:var(--text);background:var(--surface)}
+.map-tab:hover{color:var(--text);background:var(--surface);transform:translateY(-1px);
+               box-shadow:0 -3px 10px rgba(255,255,255,.06) inset}
 .map-tab.act-t1{color:#7eb8f7;border-bottom-color:var(--t1);background:rgba(37,99,235,.07)}
 .map-tab.act-t2{color:#86efac;border-bottom-color:var(--t2);background:rgba(22,163,74,.07)}
 .map-tab.act-t3{color:#5eead4;border-bottom-color:var(--t3);background:rgba(20,184,166,.07)}
@@ -165,9 +188,16 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .map-canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .map-footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
             padding:3px 9px;border-top:1px solid var(--border);background:var(--surface)}
-.expand-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;
-            border-radius:4px;font-size:14px;cursor:pointer;transition:all .15s}
-.expand-btn:hover{background:var(--border);color:var(--text)}
+.expand-btn{background:var(--btn-blue-bg);border:1px solid var(--btn-blue-border);color:var(--btn-blue-text);
+            padding:5px 11px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;
+            box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+.expand-btn:hover{background:var(--btn-blue-bg-hover);border-color:var(--btn-blue-border-hover);
+                   color:#fff;transform:translateY(-2px);box-shadow:0 4px 10px rgba(47,111,181,.45)}
+.expand-btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(0,0,0,.35)}
+
+.expand-btn-danger{background:var(--btn-red-bg);border-color:var(--btn-red-border);color:var(--btn-red-text)}
+.expand-btn-danger:hover{background:var(--btn-red-bg-hover);border-color:var(--btn-red-border-hover);
+                          color:#fff;box-shadow:0 4px 10px rgba(168,58,58,.45)}
 .download-menu{display:none;position:absolute;bottom:130%;right:0;background:#1a2035;border:1px solid #263050;
                border-radius:8px;padding:5px;width:280px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60}
 .download-menu.open{display:flex;flex-direction:column;gap:3px}
@@ -435,8 +465,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
         </div>
         <div class="paste-hint">
           <strong>Excel → copiar → clic aquí → Ctrl+V</strong>
-          <button onclick="tryClipboard()" style="margin-left:auto;background:#0d2a5a;border:1px solid #2563eb;
-                  color:#7eb8f7;padding:2px 8px;border-radius:3px;font-size:12px;cursor:pointer">📋 Pegar</button>
+          <button class="mini-blue-btn" onclick="tryClipboard()" style="margin-left:auto">📋 Pegar</button>
         </div>
         <button class="clear-etiquetas-btn" onclick="clearEtiquetas()"
                 title="Borra las etiquetas de los 3 turnos (mapa + tarjetas de Datos de turno)">
@@ -489,9 +518,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
       <div class="map-footer">
         <span class="map-finfo" id="map-finfo">—</span>
         <div style="display:flex;gap:5px">
-          
           <div style="position:relative">
-            <button class="expand-btn" style="color:#f87171;border-color:#5a1a1a" onclick="toggleClearElementsMenu(event)"
+            <button class="expand-btn expand-btn-danger" onclick="toggleClearElementsMenu(event)"
                     title="Elimina los textos, riesgos e imágenes que agregaste en el mapa (no toca los datos de turno)">
               🗑 Borrar imágenes y texto
             </button>
@@ -501,11 +529,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
             </div>
           </div>
           <div style="position:relative">
-            <button class="expand-btn" onclick="toggleCopyMenu(event)" title="Copia los textos, riesgos e imágenes que agregaste en este turno hacia otro turno">📋 Copiar a turno</button>
-            <div id="copy-menu" class="download-menu"></div>
-          </div>
-          <div style="position:relative">
-            <button class="expand-btn" style="color:#f87171;border-color:#5a1a1a" onclick="toggleClearTodoMenu(event)"
+            <button class="expand-btn expand-btn-danger" onclick="toggleClearTodoMenu(event)"
                     title="Borra TODO: imágenes/textos agregados + etiquetas de turno (+ cuadro de pegar, si elegís 'todos los turnos')">
               🗑 Borrar todo
             </button>
@@ -513,6 +537,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
               <button onclick="clearTodo('turno')">🗑 Solo este turno</button>
               <button onclick="clearTodo('all')">🗑 Todos los turnos + cuadro de pegar</button>
             </div>
+          </div>
+          <div style="position:relative">
+            <button class="expand-btn" onclick="toggleCopyMenu(event)" title="Copia los textos, riesgos e imágenes que agregaste en este turno hacia otro turno">📋 Copiar a turno</button>
+            <div id="copy-menu" class="download-menu"></div>
           </div>
           <div style="position:relative">
             <button class="expand-btn" onclick="toggleLinksMenu(event)" title="Genera un link de solo lectura (mapa + leyenda) para un turno puntual">🔗 Links</button>
