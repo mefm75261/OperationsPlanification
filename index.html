@@ -1233,8 +1233,12 @@ function drawOnCtx(ctx,t,W,H){
   });
   // Vessels (with drag offsets)
   const navAt=vals[9]||"",navAu=vals[10]||"";
-  if(navAt){const mn=navAt.startsWith("MN/");drawNave(ctx,navAt,mn?NAVE_POS.at_mn:NAVE_POS.at_txt,px,py,"SITIO 3",mn,state[t].siteColorIdx.at,state[t].siteOffsets.at);}
-  if(navAu){const mn=navAu.startsWith("MN/");drawNave(ctx,navAu,mn?NAVE_POS.au_mn:NAVE_POS.au_txt,px,py,"SITIO 4",mn,state[t].siteColorIdx.au,state[t].siteOffsets.au);}
+  if(navAt){const mn=navAt.startsWith("MN/");const pos=mn?NAVE_POS.at_mn:NAVE_POS.at_txt;
+  clampNaveOffset(state[t].siteOffsets.at,pos);
+  drawNave(ctx,navAt,pos,px,py,"SITIO 3",mn,state[t].siteColorIdx.at,state[t].siteOffsets.at);}
+  if(navAu){const mn=navAu.startsWith("MN/");const pos=mn?NAVE_POS.au_mn:NAVE_POS.au_txt;
+  clampNaveOffset(state[t].siteOffsets.au,pos);
+  drawNave(ctx,navAu,pos,px,py,"SITIO 4",mn,state[t].siteColorIdx.au,state[t].siteOffsets.au);}
   // User elements (text & risks)
   userElements.forEach(el=>{
     if(el.turnoFilter!=='all'&&el.turnoFilter!==t)return;
@@ -1317,6 +1321,12 @@ function drawOnCtx(ctx,t,W,H){
   ctx.fillStyle="#fff";ctx.font=`bold ${px(13)}px Arial`;
   ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(txt,tx+tw/2,ty+th/2);
   ctx.restore();
+}
+// Asegura que al menos 30px de la nave queden dentro del mapa
+function clampNaveOffset(off,pos){
+  const w=off.w||pos.w, h=off.h||pos.h, m=30;
+  off.dx=Math.min(IMG_W-m-pos.px, Math.max(m-w-pos.px, Number(off.dx)||0));
+  off.dy=Math.min(IMG_H-m-pos.py, Math.max(m-h-pos.py, Number(off.dy)||0));
 }
 function drawNave(ctx,val,pos,px,py,siteLabel,isMN,siteColIdx,off){
   const label=isMN?val.substring(3):val;
@@ -1967,6 +1977,13 @@ function showStatus(msg){
 }
 function parseRow(t,raw){
   const parts=raw.split("\t").map(v=>v.trim().replace(/\r?\n/g,""));
+  const prev=state[t].vals||[];
+  // Si cambió la nave de un sitio (o pasó de texto a MN/ o viceversa), vuelve a su posición original
+  [["at",9],["au",10]].forEach(([key,i])=>{
+    if((prev[i]||"")!==(parts[i]||"")){
+      state[t].siteOffsets[key]={dx:0,dy:0,w:null,h:null};
+    }
+  });
   state[t].vals=parts; renderTags(t,parts);
 }
 // ─── TAGS ────────────────────────────────────────────────────
@@ -2083,6 +2100,11 @@ function normalizeFlujoState(){
       }
     });
     state[t].flujos=f;
+        const so=state[t].siteOffsets||{};
+    ["at","au"].forEach(k=>{
+      so[k]=Object.assign({dx:0,dy:0,w:null,h:null},so[k]||{});
+    });
+    state[t].siteOffsets=so;
     delete state[t].arrowColorIdx; // el color ahora vive en cada línea, ya no por ubicación
   });
 }

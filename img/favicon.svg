@@ -1,0 +1,14 @@
+<svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="130" cy="130" r="122" fill="none" stroke="#0a4a44" stroke-width="1" stroke-dasharray="7 11" opacity=".55"/>
+  <path d="M130 8 A122 122 0 0 1 252 130" fill="none" stroke="#11b89e" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  <path d="M130 252 A122 122 0 0 1 8 130" fill="none" stroke="#11b89e" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  <circle cx="130" cy="130" r="95" fill="none" stroke="#0d7a6b" stroke-width="1.5" stroke-dasharray="14 7" opacity=".6"/>
+  <circle cx="130" cy="130" r="50" fill="#042e2b" stroke="#0d7a6b" stroke-width="1.5" opacity=".97"/>
+  <circle cx="130" cy="130" r="42" fill="none" stroke="rgba(13,122,107,0.25)" stroke-width="1"/>
+  <line x1="130" y1="104" x2="130" y2="156" stroke="#11b89e" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="114" y1="116" x2="146" y2="116" stroke="#11b89e" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="130" cy="102" r="5" fill="none" stroke="#11b89e" stroke-width="2"/>
+  <path d="M114 144 Q104 158 117 162" fill="none" stroke="#11b89e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M146 144 Q156 158 143 162" fill="none" stroke="#11b89e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M112 156 Q130 166 148 156" fill="none" stroke="#11b89e" stroke-width="2" stroke-linecap="round"/>
+</svg>
