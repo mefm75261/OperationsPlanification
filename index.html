@@ -10,7 +10,7 @@
 <script>
 (function(){
   var q=new URLSearchParams(location.search).get("turno");
-  if(q==="1"||q==="2"||q==="3") document.documentElement.classList.add("viewer-mode");
+  if(q==="0"||q==="1"||q==="2"||q==="3") document.documentElement.classList.add("viewer-mode");
   try{ document.documentElement.setAttribute("data-theme", localStorage.getItem("pf_theme")||"noche"); }
   catch(e){ document.documentElement.setAttribute("data-theme","noche"); }
 })();
@@ -56,7 +56,7 @@
   --ok:#16a34a;--warn:#b7791f;--scheme:light;
 }
 :root{--r:10px;--r-sm:7px;--shadow:0 6px 24px rgba(0,0,0,.35);
-  --t1:#4c8df6;--t2:#3fbf6f;--t3:#2dd4bf}
+  --t0:#a855f7;--t1:#4c8df6;--t2:#3fbf6f;--t3:#2dd4bf}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI Variable Text','Segoe UI',Roboto,Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;
      display:flex;flex-direction:column;padding:10px;gap:10px}
@@ -149,7 +149,7 @@ button{font-family:inherit}
 .paste-status{font-size:12px;color:var(--ok);min-height:14px}
 .dc{border-radius:var(--r-sm);border:1px solid var(--line);overflow:hidden}
 .dc.is-active{border-color:var(--tc);box-shadow:0 0 0 1px var(--tc) inset}
-.dc-t1{--tc:var(--t1)}.dc-t2{--tc:var(--t2)}.dc-t3{--tc:var(--t3)}
+.dc-t0{--tc:var(--t0)}.dc-t1{--tc:var(--t1)}.dc-t2{--tc:var(--t2)}.dc-t3{--tc:var(--t3)}
 .dc-head{display:flex;align-items:center;gap:7px;padding:5px 6px 5px 9px;font-size:13px;font-weight:700;background:var(--panel-2)}
 .dc-head .dot{width:9px;height:9px;border-radius:50%;background:var(--tc)}
 .dc-head .when{font-weight:500;font-size:11px;color:var(--muted)}
@@ -182,9 +182,9 @@ button{font-family:inherit}
 .map-tab .tdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .map-tab .tab-name{font-size:13.5px;font-weight:700;display:block}
 .map-tab .tab-hrs{font-size:12px;display:block;color:var(--muted)}
-#mtab-T1 .tdot{background:var(--t1)}#mtab-T2 .tdot{background:var(--t2)}#mtab-T3 .tdot{background:var(--t3)}
+#mtab-T0 .tdot{background:var(--t0)}#mtab-T1 .tdot{background:var(--t1)}#mtab-T2 .tdot{background:var(--t2)}#mtab-T3 .tdot{background:var(--t3)}
 .map-tab.active{background:var(--panel-3);color:var(--text)}
-#mtab-T1.active{box-shadow:inset 0 -2px 0 var(--t1)}#mtab-T2.active{box-shadow:inset 0 -2px 0 var(--t2)}#mtab-T3.active{box-shadow:inset 0 -2px 0 var(--t3)}
+#mtab-T0.active{box-shadow:inset 0 -2px 0 var(--t0)}#mtab-T1.active{box-shadow:inset 0 -2px 0 var(--t1)}#mtab-T2.active{box-shadow:inset 0 -2px 0 var(--t2)}#mtab-T3.active{box-shadow:inset 0 -2px 0 var(--t3)}
 .toolbar-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .dd{position:relative}
 .dd-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:220px;background:var(--panel-2);
@@ -293,7 +293,7 @@ button{font-family:inherit}
 }
 @media (max-width:480px){ .map-tab .tab-hrs{display:none} .ctx-grid{grid-template-columns:repeat(4,1fr)} }
 
-/* ═════════ MODO VISTA (?turno=1|2|3) ═════════ */
+/* ═════════ MODO VISTA (?turno=0|1|2|3) ═════════ */
 .viewer-mode .app-header,.viewer-mode .sidebar,.viewer-mode .map-toolbar,
 .viewer-mode .map-statusbar,.viewer-mode .map-legend{display:none!important}
 .viewer-mode body{padding:0;gap:0}
@@ -360,7 +360,7 @@ button{font-family:inherit}
   <aside class="sidebar" id="sidebar">
     <!-- FLUJO DE TRÁNSITO -->
     <details class="card" open>
-      <summary>Flujo de tránsito <span class="sum-tag" id="flujo-turno-lbl">2do Turno</span><button class="qh" type="button" data-help="flujo">?</button></summary>
+      <summary>Flujo de tránsito <span class="sum-tag" id="flujo-turno-lbl">1er Turno Actual</span><button class="qh" type="button" data-help="flujo">?</button></summary>
       <div class="card-body">
         <div class="tramo"><div class="tramo-head">Pier 3<button class="tramo-add" type="button" id="add-pier3">+ Línea</button></div><div id="fl-pier3"></div></div>
         <div class="tramo"><div class="tramo-head">Pasillo<button class="tramo-add" type="button" id="add-pasillo">+ Línea</button></div><div id="fl-pasillo"></div></div>
@@ -379,6 +379,10 @@ button{font-family:inherit}
         </div>
         <div class="paste-status" id="paste-status" aria-live="polite"></div>
 
+        <div class="dc dc-t0" data-t="T0">
+          <div class="dc-head"><span class="dot"></span>1er Turno Actual<span class="when" id="when-T0"></span><button class="ed-btn" type="button" data-edit="T0">✎ Editar</button></div>
+          <div class="dc-tags" id="tags-T0"></div><div class="editor" id="ed-T0"></div>
+        </div>
         <div class="dc dc-t1" data-t="T1">
           <div class="dc-head"><span class="dot"></span>2do Turno<span class="when" id="when-T1"></span><button class="ed-btn" type="button" data-edit="T1">✎ Editar</button></div>
           <div class="dc-tags" id="tags-T1"></div><div class="editor" id="ed-T1"></div>
@@ -399,7 +403,8 @@ button{font-family:inherit}
   <main class="map-area">
     <div class="map-toolbar">
       <div class="map-tabs" role="tablist">
-        <button class="map-tab active" id="mtab-T1" type="button" data-tab="T1"><span class="tdot"></span><span><span class="tab-name">2do Turno</span><span class="tab-hrs">15:30–23:30</span></span></button>
+        <button class="map-tab active" id="mtab-T0" type="button" data-tab="T0"><span class="tdot"></span><span><span class="tab-name">1er Turno Actual</span><span class="tab-hrs">08:00–15:30</span></span></button>
+        <button class="map-tab" id="mtab-T1" type="button" data-tab="T1"><span class="tdot"></span><span><span class="tab-name">2do Turno</span><span class="tab-hrs">15:30–23:30</span></span></button>
         <button class="map-tab" id="mtab-T2" type="button" data-tab="T2"><span class="tdot"></span><span><span class="tab-name">3er Turno</span><span class="tab-hrs">23:00–06:30</span></span></button>
         <button class="map-tab" id="mtab-T3" type="button" data-tab="T3"><span class="tdot"></span><span><span class="tab-name">1er Turno</span><span class="tab-hrs">08:00–15:30</span></span></button>
       </div>
@@ -411,17 +416,18 @@ button{font-family:inherit}
         <div class="dd">
           <button class="btn btn-ghost" type="button" id="links-btn" title="Link de solo lectura">🔗<span class="btn-label">Compartir</span><span class="caret">▾</span></button>
           <div id="links-menu" class="dd-menu">
+            <button type="button" data-link="0">1er Turno Actual</button>
             <button type="button" data-link="2">2do Turno</button>
             <button type="button" data-link="3">3er Turno</button>
-            <button type="button" data-link="1">1er Turno (mañana)</button>
+            <button type="button" data-link="1">1er Turno Siguiente</button>
           </div>
         </div>
         <div class="dd">
           <button class="btn btn-ghost" type="button" id="download-btn" title="Descargar PNG">⬇<span class="btn-label">Descargar</span><span class="caret">▾</span></button>
           <div id="download-menu" class="dd-menu">
             <button type="button" data-dl="actual">Este turno</button>
-            <button type="button" data-dl="combinado">Los 3 en una imagen</button>
-            <button type="button" data-dl="separados">Los 3 por separado</button>
+            <button type="button" data-dl="combinado">Los 4 en una imagen</button>
+            <button type="button" data-dl="separados">Los 4 por separado</button>
           </div>
         </div>
         <button class="btn btn-ghost" type="button" id="expand-btn" title="Ver en grande">⤢<span class="btn-label">Expandir</span></button>
@@ -430,14 +436,14 @@ button{font-family:inherit}
           <div id="clear-menu" class="dd-menu">
             <div class="dd-label">Textos, riesgos e imágenes</div>
             <button type="button" class="danger" data-clear="el-turno">De este turno</button>
-            <button type="button" class="danger" data-clear="el-all">De los 3 turnos</button>
+            <button type="button" class="danger" data-clear="el-all">De los 4 turnos</button>
             <div class="dd-sep"></div>
             <div class="dd-label">Etiquetas de turno</div>
-            <button type="button" class="danger" data-clear="tags-all">De los 3 turnos</button>
+            <button type="button" class="danger" data-clear="tags-all">De los 4 turnos</button>
             <div class="dd-sep"></div>
             <div class="dd-label">Todo</div>
             <button type="button" class="danger" data-clear="all-turno">Este turno</button>
-            <button type="button" class="danger" data-clear="all-all">Los 3 turnos</button>
+            <button type="button" class="danger" data-clear="all-all">Los 4 turnos</button>
           </div>
         </div>
         <button class="qh" type="button" data-help="mapa">?</button>
@@ -510,7 +516,7 @@ button{font-family:inherit}
   <div class="modal-box">
     <div class="modal-head"><div class="modal-title">Guía rápida</div><button class="modal-close" type="button" id="help-close">✕</button></div>
     <div class="help-body">
-      <div><h4>1 · Cargar el turno</h4>Copia la fila en la Pizarra (Almacén → Sitio 4) y pégala en Datos de turno. Con 3 filas se cargan los 3 turnos. Naves: MN/Nombre. Para corregir, usa ✎ Editar.</div>
+      <div><h4>1 · Cargar el turno</h4>Copia la fila en la Pizarra (Almacén → Sitio 4) y pégala en Datos de turno. Con 4 filas se cargan los 4 turnos; también admite el formato anterior de 3 filas. Naves: MN/Nombre. Para corregir, usa ✎ Editar.</div>
       <div><h4>2 · Tránsito</h4>Elige el turno en las pestañas y agrega líneas por tramo, con su sentido y tipo.</div>
       <div><h4>3 · Riesgos y maquinaria</h4>Clic en zona vacía del mapa para agregar. Arrastra para mover, rueda para tamaño, doble clic para eliminar.</div>
       <div><h4>4 · Compartir</h4>Compartir copia un link de solo lectura. Descargar guarda el plano en PNG.</div>
@@ -563,8 +569,8 @@ const NAVE_POS={
 const PIER_BOUNDS={pier3:{y:330,x0:770,x1:1100},pasillo:{y:389,x0:650,x1:1100},pier4:{y:445,x0:810,x1:1100}};
 const TRAMOS=["pier3","pasillo","pier4"];
 const FLOW_LINE_OFFSETS={1:[0],2:[-6,6],3:[-8,0,8]};
-const TURNO_NAMES={T1:"2do Turno",T2:"3er Turno",T3:"1er Turno"};
-const TURNO_HRS={T1:"15:30–23:30",T2:"23:00–06:30",T3:"08:00–15:30"};
+const TURNO_NAMES={T0:"1er Turno Actual",T1:"2do Turno",T2:"3er Turno",T3:"1er Turno Siguiente"};
+const TURNO_HRS={T0:"08:00–15:30",T1:"15:30–23:30",T2:"23:00–06:30",T3:"08:00–15:30"};
 const BASEMAP=new Image();BASEMAP.src="img/dale.png";
 const BUQUE_IMG=new Image();BUQUE_IMG.src="img/buque.png";
 
@@ -588,8 +594,8 @@ function mkTurno(){
     siteOffsets:{at:{dx:0,dy:0,w:null,h:null},au:{dx:0,dy:0,w:null,h:null}},
   };
 }
-const state={T1:mkTurno(),T2:mkTurno(),T3:mkTurno()};
-let activeMap="T1";
+const state={T0:mkTurno(),T1:mkTurno(),T2:mkTurno(),T3:mkTurno()};
+let activeMap="T0";
 const userElements=[];
 let nextElId=1;
 let manualFecha=null; // {value,setOn} si alguien eligió otra fecha hoy
@@ -636,9 +642,9 @@ const askText=(title,placeholder,value="")=>openDlg({title,input:true,placeholde
 
 // ─── AYUDA (?) EMERGENTE ─────────────────────────────────────
 const HELP={
-  fecha:"Al entrar se usa la fecha de hoy (hora de Chile). Puedes cambiarla para preparar otro día; el 1er turno toma el día siguiente. «Hoy» la devuelve a la fecha actual.",
+  fecha:"Al entrar se usa la fecha de hoy (hora de Chile). Puedes cambiarla para preparar otro día; el 1er turno siguiente toma el día siguiente; el 1er turno actual conserva la fecha seleccionada. «Hoy» la devuelve a la fecha actual.",
   flujo:"Se aplica al turno elegido en las pestañas del mapa. Hasta 3 líneas por tramo: elige el sentido y el tipo de tránsito.",
-  datos:"Copia en la Pizarra la fila del turno (Almacén → Sitio 4) y pégala aquí. Con 3 filas se cargan 2do, 3er y 1er turno. Naves: MN/Nombre (ej: MN/MSC TORONTO VIII). Con ✎ Editar cambias textos y colores.",
+  datos:"Copia en la Pizarra la fila del turno (Almacén → Sitio 4) y pégala aquí. Con 4 filas se cargan 1er actual, 2do, 3er y 1er siguiente. Si pegas 3 filas, se conserva el formato anterior. Naves: MN/Nombre (ej: MN/MSC TORONTO VIII). Con ✎ Editar cambias textos y colores.",
   mapa:"Clic en zona vacía: agregar texto, riesgo o máquina · Arrastrar: mover · Rueda: tamaño · Clic en texto: color · Doble clic: eliminar.",
 };
 function togglePop(btn){
@@ -768,7 +774,7 @@ function normalizeTurno(src){
 }
 let customKey="";
 function applyData(data){
-  ["T1","T2","T3"].forEach(t=>{state[t]=normalizeTurno(data.state&&data.state[t]);});
+  ["T0","T1","T2","T3"].forEach(t=>{state[t]=normalizeTurno(data.state&&data.state[t]);});
   userElements.length=0;
   toArr(data.userElements).forEach(el=>{if(el&&typeof el==="object")userElements.push(el);});
   nextElId=Math.max(nextElId,+data.nextElId||0,...userElements.map(e=>(+e.id||0)+1));
@@ -835,23 +841,25 @@ function onFechaChange(){
 function resetFechaHoy(){manualFecha=null;$("fecha").value=chileToday();updateFechaUI();commit();}
 function updateFechaUI(){
   $("hoy-btn").classList.toggle("show",!!manualFecha);
-  ["T1","T2","T3"].forEach(t=>{$("when-"+t).textContent=getFechaForTurno(t,true);});
+  ["T0","T1","T2","T3"].forEach(t=>{$("when-"+t).textContent=getFechaForTurno(t,true);});
 }
 function getFechaForTurno(t,short){
   const v=$("fecha").value;if(!v)return"";
   const date=new Date(v+"T12:00:00");
   if(t==="T3")date.setDate(date.getDate()+1);
-  const mm=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-  return short?`${date.getDate()} ${mm[date.getMonth()]}`:`${date.getDate()} ${mm[date.getMonth()]} ${date.getFullYear()}`;
+  const dd=String(date.getDate()).padStart(2,"0");
+  const mm=String(date.getMonth()+1).padStart(2,"0");
+  const yyyy=date.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 // ─── UI GENERAL ──────────────────────────────────────────────
 function renderAllUI(){
-  ["T1","T2","T3"].forEach(t=>{renderTags(t);if(isEditing(t))buildEditor(t);});
+  ["T0","T1","T2","T3"].forEach(t=>{renderTags(t);if(isEditing(t))buildEditor(t);});
   renderFlujo();updateFechaUI();render();
 }
 function syncTurnoUI(t){
-  ["T1","T2","T3"].forEach(x=>$("mtab-"+x).classList.toggle("active",x===t));
+  ["T0","T1","T2","T3"].forEach(x=>$("mtab-"+x).classList.toggle("active",x===t));
   document.querySelectorAll(".dc").forEach(c=>c.classList.toggle("is-active",c.dataset.t===t));
 }
 function showMapTab(t){activeMap=t;closeCtxMenu();syncTurnoUI(t);renderFlujo();render();}
@@ -978,10 +986,21 @@ function htmlTableToTSV(h){
 }
 function handlePasteAll(){
   const rows=$("paste-all").value.split(/\r?\n/).map(r=>r.replace(/\r/g,"")).filter(r=>r.replace(/\t/g,"").length>0);
-  const turnos=["T1","T2","T3"];
   if(!rows.length)return;
-  rows.slice(0,3).forEach((r,i)=>parseRow(turnos[i],r));
-  showStatus(rows.length>=3?"✓ 3 turnos cargados":rows.length===2?"✓ 2do y 3er turno cargados":"✓ 2do turno cargado");
+  if(rows.length>=4){
+    ["T0","T1","T2","T3"].forEach((t,i)=>parseRow(t,rows[i]));
+    showStatus("✓ 4 turnos cargados");
+  }else if(rows.length===3){
+    ["T1","T2","T3"].forEach((t,i)=>parseRow(t,rows[i]));
+    showStatus("✓ 3 turnos cargados (formato anterior)");
+  }else if(rows.length===2){
+    const order=["T0","T1","T2","T3"],start=Math.max(0,order.indexOf(activeMap));
+    rows.forEach((r,i)=>parseRow(order[Math.min(start+i,3)],r));
+    showStatus("✓ 2 turnos cargados desde "+TURNO_NAMES[activeMap]);
+  }else{
+    parseRow(activeMap,rows[0]);
+    showStatus("✓ "+TURNO_NAMES[activeMap]+" cargado");
+  }
   commit();
 }
 function parseRow(t,raw){
@@ -1186,19 +1205,19 @@ function populateImageGrid(){
 // ─── BORRADO ─────────────────────────────────────────────────
 async function doClear(kind){
   closeAllMenus();
-  const T=["T1","T2","T3"],ta=$("paste-all");
+  const T=["T0","T1","T2","T3"],ta=$("paste-all");
   const hasTags=t=>(state[t].vals||[]).some(v=>v);
   if(kind==="el-turno"||kind==="el-all"){
     const target=kind==="el-turno"?userElements.filter(el=>el.turnoFilter===activeMap):userElements;
     if(!target.length){toast("No hay nada que borrar","warn");return;}
-    if(!await askConfirm("Borrar elementos",`${target.length} elemento(s) ${kind==="el-turno"?"de este turno":"de los 3 turnos"}.`))return;
+    if(!await askConfirm("Borrar elementos",`${target.length} elemento(s) ${kind==="el-turno"?"de este turno":"de los 4 turnos"}.`))return;
     const n=target.length;
     if(kind==="el-turno"){for(let i=userElements.length-1;i>=0;i--)if(userElements[i].turnoFilter===activeMap)userElements.splice(i,1);}
     else userElements.length=0;
     commit();toast(`${n} eliminado(s)`);
   }else if(kind==="tags-all"){
     if(!T.some(hasTags)){toast("No hay etiquetas","warn");return;}
-    if(!await askConfirm("Borrar etiquetas","Se borran las etiquetas de los 3 turnos (mapa y tarjetas)."))return;
+    if(!await askConfirm("Borrar etiquetas","Se borran las etiquetas de los 4 turnos (mapa y tarjetas)."))return;
     T.forEach(t=>{state[t].vals=[];renderTags(t);if(isEditing(t))buildEditor(t);});
     commit();toast("Etiquetas borradas");
   }else if(kind==="all-turno"){
@@ -1209,7 +1228,7 @@ async function doClear(kind){
     commit();toast("Turno borrado");
   }else if(kind==="all-all"){
     if(!userElements.length&&!T.some(hasTags)&&!ta.value.trim()){toast("No hay nada que borrar","warn");return;}
-    if(!await askConfirm("Borrar todo","Los 3 turnos completos y el cuadro de pegar."))return;
+    if(!await askConfirm("Borrar todo","Los 4 turnos completos y el cuadro de pegar."))return;
     userElements.length=0;T.forEach(t=>{state[t].vals=[];renderTags(t);if(isEditing(t))buildEditor(t);});ta.value="";
     commit();toast("Todo borrado");
   }
@@ -1218,12 +1237,12 @@ async function doClear(kind){
 // ─── COPIAR ENTRE TURNOS ─────────────────────────────────────
 function populateCopyMenu(){
   const menu=$("copy-menu");menu.innerHTML="";
-  const others=["T1","T2","T3"].filter(t=>t!==activeMap);
+  const others=["T0","T1","T2","T3"].filter(t=>t!==activeMap);
   const count=userElements.filter(el=>el.turnoFilter===activeMap).length;
   if(!count){menu.innerHTML='<div class="dd-empty">Este turno no tiene elementos.</div>';return;}
   const lbl=document.createElement("div");lbl.className="dd-label";lbl.textContent=`${count} elemento(s)`;menu.appendChild(lbl);
   others.forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=`→ ${TURNO_NAMES[t]}`;b.onclick=()=>copyElementsToTurno([t]);menu.appendChild(b);});
-  const b=document.createElement("button");b.type="button";b.textContent="→ Ambos";b.onclick=()=>copyElementsToTurno(others);menu.appendChild(b);
+  const b=document.createElement("button");b.type="button";b.textContent="→ Todos los demás";b.onclick=()=>copyElementsToTurno(others);menu.appendChild(b);
 }
 function copyElementsToTurno(targets){
   closeAllMenus();
@@ -1294,8 +1313,8 @@ function drawOnCtx(ctx,t,W,H){
       }
     }
   });
-  const tCol={T1:"#314569",T2:"#31784b",T3:"#0ead86"},fecha=getFechaForTurno(t);
-  const txt=`PLANO PRÓXIMAS FAENAS – ${TURNO_NAMES[t]}${fecha?" – "+fecha:""}`;
+  const tCol={T0:"#6b21a8",T1:"#314569",T2:"#31784b",T3:"#0ead86"},fecha=getFechaForTurno(t);
+  const txt=`PLANO FAENAS – ${TURNO_NAMES[t]}${fecha?" – "+fecha:""}`;
   const tx=px(250),ty=py(4),tw=px(690),th=py(28);
   ctx.save();ctx.fillStyle=tCol[t]+"ee";ctx.beginPath();ctx.roundRect(tx,ty,tw,th,px(5));ctx.fill();
   ctx.fillStyle="#fff";ctx.font=`bold ${px(13)}px Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
@@ -1407,7 +1426,7 @@ function expandExcelModal(){
 function closeExcelModal(){$("excel-modal").classList.remove("open");}
 
 // ─── DESCARGAS ───────────────────────────────────────────────
-const TURNO_FILE_LABEL={T1:"2do_turno",T2:"3er_turno",T3:"1er_turno"};
+const TURNO_FILE_LABEL={T0:"1er_turno_actual",T1:"2do_turno",T2:"3er_turno",T3:"1er_turno_siguiente"};
 function renderTurnoToCanvas(t,scale=2){
   const cv=document.createElement("canvas");cv.width=IMG_W*scale;cv.height=IMG_H*scale;
   const ctx=cv.getContext("2d");
@@ -1424,19 +1443,22 @@ function triggerDownload(canvas,filename){
   },"image/png");
 }
 function doDownload(kind){
-  closeAllMenus();const f=$("fecha").value||chileToday();
+  closeAllMenus();
+  const fv=$("fecha").value||chileToday();
+  const fp=fv.split("-");
+  const f=fp.length===3?`${fp[2]}-${fp[1]}-${fp[0]}`:fv.replaceAll("/","-");
   if(kind==="actual")triggerDownload(renderTurnoToCanvas(activeMap),`plano_${TURNO_FILE_LABEL[activeMap]}_${f}.png`);
   else if(kind==="combinado"){
     const s=2,w=IMG_W*s,h=IMG_H*s,gap=Math.round(h*.02),big=document.createElement("canvas");
-    big.width=w;big.height=h*3+gap*2;const b=big.getContext("2d");b.fillStyle="#0b0f1a";b.fillRect(0,0,big.width,big.height);
-    ["T1","T2","T3"].forEach((t,i)=>b.drawImage(renderTurnoToCanvas(t,s),0,i*(h+gap)));
-    triggerDownload(big,`plano_3_turnos_${f}.png`);
-  }else ["T1","T2","T3"].forEach((t,i)=>setTimeout(()=>triggerDownload(renderTurnoToCanvas(t),`plano_${TURNO_FILE_LABEL[t]}_${f}.png`),i*350));
+    big.width=w;big.height=h*4+gap*3;const b=big.getContext("2d");b.fillStyle="#0b0f1a";b.fillRect(0,0,big.width,big.height);
+    ["T0","T1","T2","T3"].forEach((t,i)=>b.drawImage(renderTurnoToCanvas(t,s),0,i*(h+gap)));
+    triggerDownload(big,`plano_4_turnos_${f}.png`);
+  }else ["T0","T1","T2","T3"].forEach((t,i)=>setTimeout(()=>triggerDownload(renderTurnoToCanvas(t),`plano_${TURNO_FILE_LABEL[t]}_${f}.png`),i*350));
   toast("Descargando…");
 }
 
 // ─── MODO VISTA ──────────────────────────────────────────────
-const TURNO_QUERY_MAP={"1":"T3","2":"T1","3":"T2"};
+const TURNO_QUERY_MAP={"0":"T0","1":"T3","2":"T1","3":"T2"};
 function initViewerModeFromURL(){
   const q=new URLSearchParams(location.search).get("turno");
   if(q&&TURNO_QUERY_MAP[q]){
